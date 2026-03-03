@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Check, Loader2 } from "lucide-react";
 
 interface Step {
@@ -14,8 +15,43 @@ const STEPS: Step[] = [
   { id: 3, label: "Finalizing and serving" },
 ];
 
+const LOADING_MESSAGES = [
+  "Hold tight! Our AI is reimagining your space...",
+  "Did you know? Natural light makes a room look more spacious.",
+  "Before & after videos are 80% more likely to go viral on social media.",
+  "Almost there! Adding those final cinematic touches...",
+  "Japandi style blends Japanese minimalism with Scandinavian functionality.",
+  "Thank you for your patience! Good things take a little time.",
+  "A pop of color can completely change the mood of a room.",
+  "Generating high-quality video requires a little magic (and compute).",
+  "Mixing textures creates visual interest without clutter.",
+  "Fun fact: Plants not only look great but can also improve indoor air quality.",
+  "Bohemian interiors are all about carefree layers and worldly collections.",
+  "Lighting is everything. Try using warm bulbs for a cozier atmosphere.",
+  "The 'Industrial' look often features exposed brick and raw metal accents.",
+  "Rugs anchor a room and help define different living zones.",
+  "Creating smooth video transitions takes millions of AI calculations.",
+  "Modern minimalist rooms focus on 'less is more' with clean lines.",
+  "A large statement piece of art can instantly elevate a basic wall.",
+  "Mirrors are a designer's secret weapon to bouncing light around a room.",
+  "Your video is being rendered pixel by pixel in the cloud...",
+];
+
 export function ProgressStepper({ currentStep }: { currentStep: number }) {
   const percentComplete = ((currentStep) / (STEPS.length - 1)) * 100;
+  const [messageIndex, setMessageIndex] = useState(0);
+  const [fade, setFade] = useState(true);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFade(false);
+      setTimeout(() => {
+        setMessageIndex((prev) => (prev + 1) % LOADING_MESSAGES.length);
+        setFade(true);
+      }, 300); // Wait for fade out
+    }, 6000); // Cycle every 6 seconds
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="w-full max-w-md mx-auto p-6 bg-surface border border-surface-border rounded-2xl shadow-xl">
@@ -52,7 +88,9 @@ export function ProgressStepper({ currentStep }: { currentStep: number }) {
             style={{ width: `${Math.max(5, percentComplete)}%` }}
           />
         </div>
-        <p className="text-xs text-zinc-400 mt-3 text-center">This usually takes about 2–3 minutes.</p>
+        <p className={`text-xs text-zinc-400 mt-3 text-center transition-opacity duration-300 ${fade ? "opacity-100" : "opacity-0"}`}>
+          {LOADING_MESSAGES[messageIndex]}
+        </p>
       </div>
     </div>
   );

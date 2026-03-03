@@ -76,11 +76,11 @@ export function ImageUploader({ label, onImageSelected, selectedFile }: ImageUpl
           onChange={handleFileChange}
         />
         
-        {selectedFile ? (
+        {selectedFile && blobUrl ? (
           <div className="relative w-full h-full p-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img 
-              src={blobUrl || ""} 
+              src={blobUrl} 
               alt="Preview" 
               className="w-full h-full object-cover rounded-lg"
             />
