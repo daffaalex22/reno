@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #0f0f11;
+  --color-foreground: #ededed;
+  
+  --color-accent: #f59e0b; /* Amber-500 */
+  --color-accent-hover: #fbbf24; /* Amber-400 */
+
+  --color-surface: #1e1e21;
+  --color-surface-hover: #29292d;
+  --color-surface-border: #3f3f46;
+
+  --font-sans: var(--font-outfit), Arial, sans-serif;
+  
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+}
