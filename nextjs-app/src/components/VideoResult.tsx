@@ -22,11 +22,14 @@ export function VideoResult({ videoUrl, onReset }: VideoResultProps) {
   };
 
   const copyLink = async () => {
-    await navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(pageUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      console.error("Failed to copy link to clipboard");
+    }
   };
-
   return (
     <div className="w-full max-w-2xl mx-auto flex flex-col items-center">
       <div className="text-center mb-6">
@@ -40,10 +43,10 @@ export function VideoResult({ videoUrl, onReset }: VideoResultProps) {
           src={videoUrl} 
           controls 
           autoPlay 
+          muted
           loop 
           className="w-full h-full object-contain bg-black"
-        />
-      </div>
+        />      </div>
 
       <div className="flex flex-col sm:flex-row gap-4 w-full">
         <button 

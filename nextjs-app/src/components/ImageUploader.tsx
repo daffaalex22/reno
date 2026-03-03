@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { UploadCloud, X } from "lucide-react";
 
 interface ImageUploaderProps {
@@ -11,7 +11,20 @@ interface ImageUploaderProps {
 
 export function ImageUploader({ label, onImageSelected, selectedFile }: ImageUploaderProps) {
   const [isDragOver, setIsDragOver] = useState(false);
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (selectedFile) {
+      const url = URL.createObjectURL(selectedFile);
+      setBlobUrl(url);
+      return () => {
+        URL.revokeObjectURL(url);
+      };
+    } else {
+      setBlobUrl(null);
+    }
+  }, [selectedFile]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -19,11 +32,16 @@ export function ImageUploader({ label, onImageSelected, selectedFile }: ImageUpl
     }
   };
 
+  const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragOver(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      onImageSelected(e.dataTransfer.files[0]);
+      const file = e.dataTransfer.files[0];
+      if (ALLOWED_TYPES.includes(file.type)) {
+        onImageSelected(file);
+      }
     }
   };
 
@@ -62,17 +80,17 @@ export function ImageUploader({ label, onImageSelected, selectedFile }: ImageUpl
           <div className="relative w-full h-full p-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img 
-              src={URL.createObjectURL(selectedFile)} 
+              src={blobUrl || ""} 
               alt="Preview" 
               className="w-full h-full object-cover rounded-lg"
             />
             <button 
               onClick={clearImage}
+              aria-label="Remove selected image"
               className="absolute top-4 right-4 p-1 bg-black/60 text-white rounded-full hover:bg-black/90 transition"
             >
               <X size={16} />
-            </button>
-          </div>
+            </button>          </div>
         ) : (
           <div className="flex flex-col items-center justify-center text-center p-4">
             <UploadCloud className="w-8 h-8 mb-2 text-zinc-400" />

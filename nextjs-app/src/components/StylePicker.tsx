@@ -39,6 +39,10 @@ export function StylePicker({ onStyleSelected, onCustomImageSelected }: StylePic
           <div
             key={preset.id}
             onClick={() => handleSelect(preset.id as StyleOption)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleSelect(preset.id as StyleOption); }}
+            role="button"
+            tabIndex={0}
+            aria-pressed={selected === preset.id}
             className={`relative rounded-xl overflow-hidden cursor-pointer border-2 transition-all ${
               selected === preset.id ? "border-accent shadow-[0_0_15px_rgba(245,158,11,0.3)]" : "border-surface hover:border-surface-border relative bg-surface"
             }`}
@@ -58,12 +62,15 @@ export function StylePicker({ onStyleSelected, onCustomImageSelected }: StylePic
               </div>
             )}
             <div className="w-full h-24"></div> {/* spacer */}
-          </div>
-        ))}
+          </div>))}
         
         {/* Custom Style Tile */}
         <div
             onClick={() => handleSelect("Custom")}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleSelect("Custom"); }}
+          role="button"
+          tabIndex={0}
+          aria-pressed={selected === "Custom"}
             className={`relative rounded-xl overflow-hidden cursor-pointer border-2 transition-all flex items-center justify-center bg-surface h-24 ${
               selected === "Custom" ? "border-accent shadow-[0_0_15px_rgba(245,158,11,0.3)]" : "border-surface-border hover:bg-surface-hover"
             }`}
@@ -74,8 +81,7 @@ export function StylePicker({ onStyleSelected, onCustomImageSelected }: StylePic
                 <Check size={12} strokeWidth={3} />
               </div>
             )}
-        </div>
-      </div>
+        </div>      </div>
 
       {selected === "Custom" && (
         <div className="mt-2 animate-in fade-in slide-in-from-top-2">

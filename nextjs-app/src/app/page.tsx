@@ -20,7 +20,7 @@ export default function Home() {
   const [currentStep, setCurrentStep] = useState(0);
   const [videoUrl, setVideoUrl] = useState("");
 
-  const canGenerate = roomFile && (selectedStyle !== "Custom" || (selectedStyle === "Custom" && customStyleFile !== null));
+  const canGenerate = roomFile && selectedStyle !== null && (selectedStyle !== "Custom" || customStyleFile !== null);
 
   const handleGenerate = () => {
     if (!canGenerate) return;
