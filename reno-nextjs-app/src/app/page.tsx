@@ -21,9 +21,16 @@ const PRESET_STYLE_URLS: Record<string, string> = {
   "Modern Farmhouse": "/presets/modern-farmhouse.png",
 };
 
+const EXAMPLE_ROOMS = [
+  { id: "kos", label: "Kamar Kos", path: "/examples/indonesian-kos.png" },
+  { id: "kitchen", label: "Dapur Rumah", path: "/examples/indonesian-kitchen.png" },
+  { id: "living", label: "Ruang Tamu", path: "/examples/indonesian-living-room.png" },
+];
+
 export default function Home() {
   const [appState, setAppState] = useState<AppState>("idle");
   const [roomFile, setRoomFile] = useState<File | null>(null);
+  const [selectedExample, setSelectedExample] = useState<string | null>(null);
   const [selectedStyle, setSelectedStyle] = useState<StyleOption | null>(null);
 
   const [currentStep, setCurrentStep] = useState(0);
@@ -37,7 +44,7 @@ export default function Home() {
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const sliderRef = useRef<BeforeAfterHandle>(null);
 
-  const canGenerate = roomFile && selectedStyle !== null;
+  const canGenerate = (roomFile || selectedExample) && selectedStyle !== null;
 
   const stopPolling = useCallback(() => {
     if (pollRef.current) {
@@ -47,19 +54,29 @@ export default function Home() {
   }, []);
 
   const handleGenerate = async () => {
-    if (!canGenerate || !roomFile) return;
+    if (!canGenerate) return;
 
     setAppState("loading");
     setCurrentStep(0);
     setErrorMsg("");
 
     try {
-      // ── 1. Upload room photo ─────────────────────────────────────
-      const roomForm = new FormData();
-      roomForm.append("file", roomFile);
-      const roomUpload = await fetch("/api/upload", { method: "POST", body: roomForm });
-      if (!roomUpload.ok) throw new Error("Failed to upload room photo");
-      const { publicPath: roomPublicPath } = await roomUpload.json();
+      let roomPublicPath = "";
+
+      if (roomFile) {
+        // ── 1. Upload room photo ─────────────────────────────────────
+        const roomForm = new FormData();
+        roomForm.append("file", roomFile);
+        const roomUpload = await fetch("/api/upload", { method: "POST", body: roomForm });
+        if (!roomUpload.ok) throw new Error("Failed to upload room photo");
+        const res = await roomUpload.json();
+        roomPublicPath = res.publicPath;
+      } else if (selectedExample) {
+        // Use the example path directly
+        roomPublicPath = selectedExample;
+      } else {
+        throw new Error("Missing room image");
+      }
 
       // ── 2. Resolve style image public path ────────────────────────
       const stylePublicPath = PRESET_STYLE_URLS[selectedStyle as string];
@@ -159,6 +176,7 @@ export default function Home() {
     setErrorMsg("");
     setJobId("");
     setPreviewImages(null);
+    setSelectedExample(null);
   };
 
   const handleDownloadComparison = async () => {
@@ -292,8 +310,36 @@ export default function Home() {
                 <ImageUploader
                   label="1. Upload Room Photo"
                   selectedFile={roomFile}
-                  onImageSelected={setRoomFile}
+                  onImageSelected={(file) => {
+                    setRoomFile(file);
+                    if (file) setSelectedExample(null); // Clear example if user uploads
+                  }}
                 />
+
+                {/* Example Rooms Section */}
+                <div className="mt-4">
+                  <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">Or try an example:</p>
+                  <div className="grid grid-cols-3 gap-3">
+                    {EXAMPLE_ROOMS.map((ex) => (
+                      <button
+                        key={ex.id}
+                        onClick={() => {
+                          setSelectedExample(ex.path);
+                          setRoomFile(null); // Clear uploaded file if user picks example
+                        }}
+                        className={`group relative aspect-square rounded-xl overflow-hidden border-2 transition-all ${selectedExample === ex.path
+                          ? "border-accent scale-[0.98] shadow-lg shadow-accent/20"
+                          : "border-transparent hover:border-zinc-700 opacity-60 hover:opacity-100"
+                          }`}
+                      >
+                        <img src={ex.path} alt={ex.label} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <span className="text-[10px] font-bold text-white uppercase">{ex.label}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <div className="flex flex-col gap-4">
@@ -466,7 +512,7 @@ export default function Home() {
 
                   <div className="flex-1">
                     <h4 className="text-lg font-bold text-white mb-1 tracking-tight">Comparison Split (16:9)</h4>
-                    <p className="text-sm text-zinc-400 mb-4 tracking-tight">Perfect for X (Twitter), Facebook or Pinterest. <br /><span className="text-accent/80 font-medium italic">Captures current slider position.</span></p>
+                    <p className="text-sm text-zinc-400 mb-4 tracking-tight">Perfect for X (Twitter), Facebook or Pinterest. <br /><span className="text-accent/80 font-medium italic">Captures a classic 50/50 balance.</span></p>
                     <div className="flex gap-2">
                       <button
                         onClick={() => {

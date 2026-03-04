@@ -96,7 +96,7 @@ export const BeforeAfterSlider = forwardRef<BeforeAfterHandle, BeforeAfterSlider
         ctx.drawImage(imgAfter, 0, 0);
 
         // 2. Draw Before Image (Clipped)
-        const splitX = (sliderPos / 100) * canvas.width;
+        const splitX = 0.5 * canvas.width;
         ctx.save();
         ctx.beginPath();
         ctx.rect(0, 0, splitX, canvas.height);
