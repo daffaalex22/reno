@@ -48,6 +48,7 @@ jobs:
             exit 1
           fi
 
+          mkdir -p deploy/.next
           cp -r reno-nextjs-app/.next/static deploy/.next/static
           cp -r reno-nextjs-app/public deploy/public
 
