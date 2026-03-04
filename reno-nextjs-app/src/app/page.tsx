@@ -15,14 +15,16 @@ const PRESET_STYLE_URLS: Record<string, string> = {
   "Japandi": "/presets/japandi.png",
   "Industrial": "/presets/industrial.png",
   "Bohemian": "/presets/bohemian.png",
+  "Scandinavian": "/presets/scandinavian.png",
+  "Mid-Century Modern": "/presets/mid-century-modern.png",
+  "Coastal": "/presets/coastal.png",
+  "Modern Farmhouse": "/presets/modern-farmhouse.png",
 };
 
 export default function Home() {
   const [appState, setAppState] = useState<AppState>("idle");
   const [roomFile, setRoomFile] = useState<File | null>(null);
   const [selectedStyle, setSelectedStyle] = useState<StyleOption | null>(null);
-  const [customStyleFile, setCustomStyleFile] = useState<File | null>(null);
-  const [customPrompt, setCustomPrompt] = useState("");
 
   const [currentStep, setCurrentStep] = useState(0);
   const [videoUrl, setVideoUrl] = useState("");
@@ -32,10 +34,7 @@ export default function Home() {
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const canGenerate =
-    roomFile &&
-    selectedStyle !== null &&
-    (selectedStyle !== "Custom" || customStyleFile !== null);
+  const canGenerate = roomFile && selectedStyle !== null;
 
   const stopPolling = useCallback(() => {
     if (pollRef.current) {
@@ -60,17 +59,7 @@ export default function Home() {
       const { publicPath: roomPublicPath } = await roomUpload.json();
 
       // ── 2. Resolve style image public path ────────────────────────
-      let stylePublicPath: string;
-      if (selectedStyle === "Custom" && customStyleFile) {
-        const styleForm = new FormData();
-        styleForm.append("file", customStyleFile);
-        const styleUpload = await fetch("/api/upload", { method: "POST", body: styleForm });
-        if (!styleUpload.ok) throw new Error("Failed to upload style image");
-        const res = await styleUpload.json();
-        stylePublicPath = res.publicPath;
-      } else {
-        stylePublicPath = PRESET_STYLE_URLS[selectedStyle as string];
-      }
+      const stylePublicPath = PRESET_STYLE_URLS[selectedStyle as string];
 
       // ── 3. Start the generation pipeline ─────────────────────────
       const genRes = await fetch("/api/generate", {
@@ -80,7 +69,6 @@ export default function Home() {
           roomImagePublicPath: roomPublicPath,
           styleImagePublicPath: stylePublicPath,
           style: selectedStyle,
-          customPrompt: customPrompt.trim() || undefined,
         }),
       });
       if (!genRes.ok) throw new Error("Failed to start generation");
@@ -163,8 +151,6 @@ export default function Home() {
     setAppState("idle");
     setRoomFile(null);
     setSelectedStyle(null);
-    setCustomStyleFile(null);
-    setCustomPrompt("");
     setCurrentStep(0);
     setVideoUrl("");
     setErrorMsg("");
@@ -183,7 +169,7 @@ export default function Home() {
           <div className="bg-accent text-black p-1.5 rounded-lg">
             <Sparkles size={16} />
           </div>
-          <span>Dream Room Generator</span>
+          <span>Reno</span>
         </div>
         <div className="hidden sm:flex px-3 py-1 rounded-full border border-surface-border bg-surface text-xs font-medium text-zinc-400">
           ✨ Powered by AI · Made to share
@@ -223,22 +209,11 @@ export default function Home() {
               <div className="flex flex-col gap-4">
                 <StylePicker
                   onStyleSelected={setSelectedStyle}
-                  onCustomImageSelected={setCustomStyleFile}
                 />
               </div>
             </div>
 
-            <div className="w-full border-t border-surface-border pt-6 mb-8 text-left">
-              <label className="text-sm font-medium text-foreground block mb-2">
-                2. Describe your vision (Optional)
-              </label>
-              <textarea
-                placeholder="e.g. Add more indoor plants and natural light..."
-                className="w-full bg-black/50 border border-surface-border rounded-xl p-4 text-sm text-foreground focus:outline-none focus:border-accent transition-colors resize-none h-24"
-                value={customPrompt}
-                onChange={(e) => setCustomPrompt(e.target.value)}
-              />
-            </div>
+
 
             <button
               onClick={handleGenerate}

@@ -8,7 +8,7 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Dream Room Generator",
+  title: "Reno",
   description: "Create your before/after room transformation — the video your followers will actually share.",
 };
 
