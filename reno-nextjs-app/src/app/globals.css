@@ -76,3 +76,12 @@ button:disabled {
 .animate-gradient-x {
   animation: gradient-x 3s ease infinite;
 }
+
+.text-gradient-animated {
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  background-size: 200% auto;
+  animation: gradient-x 3s ease infinite;
+  background-image: linear-gradient(to right, var(--color-accent), #fcd34d, var(--color-accent));
+}

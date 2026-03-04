@@ -369,7 +369,7 @@ export default function Home() {
           <div className="bg-accent text-black p-1.5 rounded-lg">
             <Sparkles size={16} />
           </div>
-          <span>Reno</span>
+          <span className="text-gradient-animated">Reno</span>
         </div>
         <div className="hidden sm:flex px-3 py-1 rounded-full border border-surface-border bg-surface text-xs font-medium text-zinc-400">
           ✨ Powered by AI · Made to share
@@ -380,7 +380,7 @@ export default function Home() {
         <div className="w-full flex flex-col items-center text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
           <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 max-w-3xl leading-tight">
             Create your{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-600">
+            <span className="text-gradient-animated">
               viral before/after
             </span>{" "}
             room transformation.
@@ -545,7 +545,7 @@ export default function Home() {
             onClick={e => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-black italic uppercase tracking-tight">Export <span className="text-accent">Hub</span></h3>
+              <h3 className="text-2xl font-black italic uppercase tracking-tight">Export <span className="text-gradient-animated">Hub</span></h3>
               <button onClick={() => setIsExportModalOpen(false)} className="cursor-pointer text-zinc-500 hover:text-white transition-colors">
                 <X size={24} />
               </button>
@@ -690,7 +690,7 @@ export default function Home() {
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300">
           <div className="bg-surface border border-surface-border rounded-3xl p-8 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-300">
             <div className="flex flex-col items-center text-center">
-              <h3 className="text-2xl font-black italic uppercase tracking-tight mb-4">Patience is <span className="text-accent">Key</span></h3>
+              <h3 className="text-2xl font-black italic uppercase tracking-tight mb-4">Patience is <span className="text-gradient-animated">Key</span></h3>
               <div className="mt-4 p-3 bg-amber-500/5 rounded-xl border border-amber-500/10 flex items-center gap-3">
                 <Clock size={16} className="text-accent" />
                 <p className="text-[10px] text-zinc-400">
