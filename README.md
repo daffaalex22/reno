@@ -98,7 +98,7 @@
 ```text
 .
 ├── .github/workflows/      # CI/CD deployment pipelines 🚀
-├── model-testing/          # Standalone scripts for testing APIs 🧪
+├── testing/          # Standalone scripts for testing APIs 🧪
 ├── reno-nextjs-app/        # Core Next.js Application ⚛️
 │   ├── public/             # Static assets (presets, images) 🖼️
 │   └── src/
@@ -132,7 +132,7 @@ Create a `.env.local` file in the `reno-nextjs-app` directory based on `.env.exa
 
 - **Branching**: Use feature branches and target `main` for pull requests. 🌿
 - **Linting**: Run `next lint` (if configured) or rely on editor integration. 🧹
-- **Testing**: Standalone API tests can be found in `model-testing/`. 🧪
+- **Testing**: Standalone API tests can be found in `testing/`. 🧪
 
 ## Deployment 🚢
 

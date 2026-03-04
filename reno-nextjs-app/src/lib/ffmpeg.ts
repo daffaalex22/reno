@@ -21,13 +21,16 @@ export async function mergeVideoAndAudio(
     Ffmpeg()
       .input(videoPath)
       .input(audioPath)
+      .complexFilter([
+        "[1:a]apad[A]"       // Pad the audio track with infinite silence
+      ])
       .outputOptions([
         "-c:v copy",         // Copy video stream as-is (no re-encode)
         "-c:a aac",          // Encode audio to AAC
         "-b:a 128k",         // Audio bitrate
-        "-shortest",         // End when the shortest stream ends
+        "-shortest",         // End when the shortest stream ends (which will be the video, since audio is infinite)
         "-map 0:v:0",        // Video from first input
-        "-map 1:a:0",        // Audio from second input
+        "-map [A]",          // Audio from complex filter
       ])
       .output(outputPath)
       .on("end", () => {
