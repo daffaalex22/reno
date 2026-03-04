@@ -23,5 +23,7 @@ export async function GET(
     videoUrl: job.videoUrl,
     renovatedImageUrl: job.renovatedImageUrl,
     error: job.error,
+    createdAt: job.createdAt,
+    finishedAt: job.finishedAt,
   });
 }

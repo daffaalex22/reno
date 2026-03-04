@@ -60,6 +60,9 @@ export async function POST(req: NextRequest) {
       const job = getJob(existingJobId);
       if (!job) return NextResponse.json({ error: "Job not found" }, { status: 404 });
       
+      // Clear previous phase's finish time so timer resumes
+      updateJob(existingJobId, { finishedAt: undefined });
+
       // Fire and forget - resume pipeline from video step
       runPart2(existingJobId);
       return NextResponse.json({ jobId: existingJobId });
@@ -127,6 +130,7 @@ async function runPart1(
       renovatedImageUrl: renovatedAbsoluteUrl,
       status: "preview", 
       message: "Image ready for preview",
+      finishedAt: Date.now(),
     });
   } catch (err) {
     console.error(`[pipeline:p1][${jobId}]`, err);
@@ -211,6 +215,7 @@ async function runPart2(
       step: 3,
       message: "Finish!",
       videoUrl: finalVideoUrl,
+      finishedAt: Date.now(),
     });
   } catch (err) {
     console.error(`[pipeline:p2][${jobId}]`, err);

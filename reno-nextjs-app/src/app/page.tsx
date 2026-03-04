@@ -1,12 +1,22 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { ImageUploader } from "@/components/ImageUploader";
 import { StylePicker, StyleOption } from "@/components/StylePicker";
 import { ProgressStepper } from "@/components/ProgressStepper";
 import { BeforeAfterSlider, BeforeAfterHandle } from "@/components/BeforeAfterSlider";
 import { VideoResult } from "@/components/VideoResult";
-import { Sparkles, Play, Share2, Download, RotateCcw, ImageIcon, Smartphone, X } from "lucide-react";
+import {
+  Sparkles,
+  Play,
+  Share2,
+  Download,
+  RotateCcw,
+  ImageIcon,
+  Smartphone,
+  X,
+  Clock
+} from "lucide-react";
 
 type AppState = "idle" | "loading" | "preview" | "result";
 
@@ -37,14 +47,41 @@ export default function Home() {
   const [videoUrl, setVideoUrl] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [jobId, setJobId] = useState("");
+  const [jobCreatedAt, setJobCreatedAt] = useState<number | null>(null);
+  const [jobFinishedAt, setJobFinishedAt] = useState<number | null>(null);
   const [previewImages, setPreviewImages] = useState<{ before: string; after: string } | null>(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isVideoWarningModalOpen, setIsVideoWarningModalOpen] = useState(false);
   const [exportPreviews, setExportPreviews] = useState<{ comparison?: string; story?: string }>({});
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const sliderRef = useRef<BeforeAfterHandle>(null);
 
   const canGenerate = (roomFile || selectedExample) && selectedStyle !== null;
+
+  // Persistence: Check for active job on mount
+  useEffect(() => {
+    const savedJobId = localStorage.getItem("reno_active_job_id");
+    const savedJobAt = localStorage.getItem("reno_active_job_at");
+
+    if (savedJobId) {
+      setJobId(savedJobId);
+      if (savedJobAt) setJobCreatedAt(parseInt(savedJobAt));
+      setAppState("loading"); // Start in loading state until first pulse
+      startPolling(savedJobId);
+    }
+  }, []);
+
+  // Update localStorage when credentials change
+  useEffect(() => {
+    if (jobId) {
+      localStorage.setItem("reno_active_job_id", jobId);
+      if (jobCreatedAt) localStorage.setItem("reno_active_job_at", jobCreatedAt.toString());
+    } else {
+      localStorage.removeItem("reno_active_job_id");
+      localStorage.removeItem("reno_active_job_at");
+    }
+  }, [jobId, jobCreatedAt]);
 
   const stopPolling = useCallback(() => {
     if (pollRef.current) {
@@ -120,6 +157,9 @@ export default function Home() {
         const statusRes = await fetch(`/api/status/${targetJobId}`);
         const job = await statusRes.json();
 
+        if (job.createdAt) setJobCreatedAt(job.createdAt);
+        setJobFinishedAt(job.finishedAt || null);
+
         if (STEP_MAP[job.status] !== undefined) {
           setCurrentStep(STEP_MAP[job.status]);
         }
@@ -139,6 +179,8 @@ export default function Home() {
           stopPolling();
           setErrorMsg(job.error || "Something went wrong.");
           setAppState("idle");
+          setJobId(""); // Clear persistent job on error
+          setJobCreatedAt(null);
         }
       } catch {
         // ignore
@@ -146,10 +188,16 @@ export default function Home() {
     }, 3000);
   };
 
-  const handleProceedToVideo = async () => {
+  const handleProceedToVideo = () => {
+    setIsVideoWarningModalOpen(true);
+  };
+
+  const confirmVideoGeneration = async () => {
+    setIsVideoWarningModalOpen(false);
     if (!jobId) return;
     setAppState("loading");
     setCurrentStep(1); // Resume at script step
+    setJobFinishedAt(null); // Clear previous finished state so timer resumes
 
     try {
       const res = await fetch("/api/generate", {
@@ -175,8 +223,12 @@ export default function Home() {
     setVideoUrl("");
     setErrorMsg("");
     setJobId("");
+    setJobCreatedAt(null);
+    setJobFinishedAt(null);
     setPreviewImages(null);
     setSelectedExample(null);
+    localStorage.removeItem("reno_active_job_id");
+    localStorage.removeItem("reno_active_job_at");
   };
 
   const handleDownloadComparison = async () => {
@@ -369,7 +421,7 @@ export default function Home() {
 
       {appState === "loading" && (
         <div className="w-full flex-1 flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-500">
-          <ProgressStepper currentStep={currentStep} />
+          <ProgressStepper currentStep={currentStep} startedAt={jobCreatedAt} finishedAt={jobFinishedAt} />
         </div>
       )}
 
@@ -542,6 +594,50 @@ export default function Home() {
             <p className="text-center text-[10px] text-zinc-600 mt-8 uppercase tracking-[0.2em] font-black italic">
               Select your style to continue
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* Video Warning Modal */}
+      {isVideoWarningModalOpen && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300">
+          <div className="bg-surface border border-surface-border rounded-3xl p-8 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="flex flex-col items-center text-center">
+              <h3 className="text-2xl font-black italic uppercase tracking-tight mb-4">Patience is <span className="text-accent">Key</span></h3>
+              <div className="mt-4 p-3 bg-amber-500/5 rounded-xl border border-amber-500/10 flex items-center gap-3">
+                <Clock size={16} className="text-accent" />
+                <p className="text-[10px] text-zinc-400">
+                  <span className="text-white">Progress is saved!</span> Feel free to close this tab. Come back later and your video will be waiting.
+                </p>
+              </div>
+              <div className="space-y-4 text-zinc-400 text-sm leading-relaxed">
+                <p>
+                  Creating a cinematic AI video is extremely compute-intensive.
+                </p>
+                <div className="bg-zinc-900/50 p-4 rounded-xl border border-white/5">
+                  <p className="font-bold text-white mb-1">Expect a wait of 10-15 minutes.</p>
+                  <p className="text-[10px] uppercase tracking-widest text-zinc-500">Alibaba Cloud Infrastructure Limitation</p>
+                </div>
+                <p>
+                  We recommend <span className="text-white font-medium">sharing the image first</span> while the AI works its magic in the background.
+                </p>
+              </div>
+
+              <div className="flex flex-col w-full gap-3 mt-8">
+                <button
+                  onClick={confirmVideoGeneration}
+                  className="w-full bg-accent hover:bg-black text-black hover:text-white border-2 border-accent py-4 rounded-2xl font-black transition-all shadow-lg active:scale-95"
+                >
+                  START VIDEO GENERATION
+                </button>
+                <button
+                  onClick={() => setIsVideoWarningModalOpen(false)}
+                  className="w-full text-zinc-500 hover:text-white transition-colors py-2 text-sm font-bold"
+                >
+                  Go Back
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

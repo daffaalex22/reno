@@ -104,6 +104,7 @@ export interface Job {
   customPrompt?: string;
   error?: string;
   createdAt: number;
+  finishedAt?: number;
 }
 
 // Use globalThis so the job map survives module reloads in Next.js dev mode

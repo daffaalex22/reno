@@ -144,7 +144,7 @@ export async function generateVoiceoverScript(style: string): Promise<string> {
     throw new Error(`Qwen script gen failed: ${JSON.stringify(err)}`);
   }
   const data = await res.json();
-  return (data.output?.choices?.[0]?.message?.content as string) || `I transformed my room into a stunning ${style} space. This is what AI can do.`;
+  return (data.output?.choices?.[0]?.message?.content as string) || `I transformed my room into a stunning ${style} space.`;
 }
 
 // ─────────────────────────────────────────────
