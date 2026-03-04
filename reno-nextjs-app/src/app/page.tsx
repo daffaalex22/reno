@@ -4,9 +4,9 @@ import { useState, useRef, useCallback } from "react";
 import { ImageUploader } from "@/components/ImageUploader";
 import { StylePicker, StyleOption } from "@/components/StylePicker";
 import { ProgressStepper } from "@/components/ProgressStepper";
-import { BeforeAfterSlider } from "@/components/BeforeAfterSlider";
+import { BeforeAfterSlider, BeforeAfterHandle } from "@/components/BeforeAfterSlider";
 import { VideoResult } from "@/components/VideoResult";
-import { Sparkles, Play, Share2, Download, RotateCcw } from "lucide-react";
+import { Sparkles, Play, Share2, Download, RotateCcw, ImageIcon } from "lucide-react";
 
 type AppState = "idle" | "loading" | "preview" | "result";
 
@@ -33,6 +33,7 @@ export default function Home() {
   const [previewImages, setPreviewImages] = useState<{ before: string; after: string } | null>(null);
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const sliderRef = useRef<BeforeAfterHandle>(null);
 
   const canGenerate = roomFile && selectedStyle !== null;
 
@@ -158,6 +159,42 @@ export default function Home() {
     setPreviewImages(null);
   };
 
+  const handleDownloadComparison = async () => {
+    if (!sliderRef.current) return;
+    try {
+      const dataUrl = await sliderRef.current.captureComparison();
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = `reno-comparison-${Date.now()}.jpg`;
+      link.click();
+    } catch (err) {
+      console.error("Capture failed", err);
+    }
+  };
+
+  const handleShareComparison = async () => {
+    if (!sliderRef.current) return;
+    try {
+      const dataUrl = await sliderRef.current.captureComparison();
+      const blob = await (await fetch(dataUrl)).blob();
+      const file = new File([blob], "reno-transformation.jpg", { type: "image/jpeg" });
+
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: "Check out my room transformation!",
+          text: "I used Reno AI to redesign my room. What do you think?",
+        });
+      } else {
+        // Fallback: Copy to clipboard or just download
+        handleDownloadComparison();
+      }
+    } catch (err) {
+      console.error("Share failed", err);
+      handleDownloadComparison();
+    }
+  };
+
   return (
     <main className="flex-1 flex flex-col items-center justify-start p-6 md:p-12 max-w-5xl mx-auto w-full">
       {/* Header */}
@@ -251,47 +288,50 @@ export default function Home() {
           </div>
 
           <BeforeAfterSlider
+            ref={sliderRef}
             beforeUrl={previewImages.before}
             afterUrl={previewImages.after}
           />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-10">
+          <div className="grid grid-cols-1 sm:grid-cols-1 gap-4 mt-10">
             <button
               onClick={handleProceedToVideo}
-              className="flex items-center justify-center gap-3 bg-accent hover:bg-black text-black hover:text-white border-2 border-accent px-8 py-5 rounded-2xl font-black text-xl transition-all shadow-xl hover:-translate-y-1 active:scale-95"
+              className="group relative flex items-center justify-center gap-3 bg-accent hover:bg-black text-black hover:text-white border-2 border-accent px-8 py-6 rounded-2xl font-black text-xl transition-all shadow-[0_10px_30px_rgba(245,158,11,0.3)] hover:-translate-y-1 active:scale-95"
             >
               <Play size={24} fill="currentColor" />
               CREATE AI VIDEO
+              <div className="absolute -top-3 -right-3 bg-white text-black text-[10px] px-2 py-1 rounded-lg font-bold shadow-lg border border-zinc-200">
+                RECOMMENDED
+              </div>
             </button>
+          </div>
 
-            <div className="flex gap-4">
-              <a
-                href={previewImages.after}
-                download="renovated-room.jpg"
-                className="flex-1 flex items-center justify-center gap-2 bg-surface hover:bg-surface-hover border border-surface-border text-zinc-300 px-4 py-4 rounded-2xl font-bold transition-all hover:text-white active:scale-95"
-              >
-                <Download size={20} />
-                Save .JPG
-              </a>
-              <button
-                onClick={() => {
-                  if (navigator.share) {
-                    navigator.share({
-                      title: 'My Dream Room Transformation',
-                      text: 'Check out how I renovated my room with AI!',
-                      url: previewImages.after
-                    });
-                  } else {
-                    alert("Image URL copied to clipboard!");
-                    navigator.clipboard.writeText(previewImages.after);
-                  }
-                }}
-                className="flex-1 flex items-center justify-center gap-2 bg-surface hover:bg-surface-hover border border-surface-border text-zinc-300 px-4 py-4 rounded-2xl font-bold transition-all hover:text-white active:scale-95"
-              >
-                <Share2 size={20} />
-                Share
-              </button>
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+            <button
+              onClick={handleShareComparison}
+              className="flex items-center justify-center gap-2 bg-white text-black hover:bg-zinc-100 border border-zinc-200 px-4 py-4 rounded-2xl font-bold transition-all active:scale-95"
+            >
+              <Share2 size={20} />
+              Share Comparison
+            </button>
+            <button
+              onClick={handleDownloadComparison}
+              className="flex items-center justify-center gap-2 bg-surface hover:bg-surface-hover border border-surface-border text-zinc-300 px-4 py-4 rounded-2xl font-bold transition-all hover:text-white active:scale-95"
+            >
+              <Download size={20} />
+              Save Comparison
+            </button>
+          </div>
+
+          <div className="mt-6 pt-6 border-t border-surface-border flex justify-center">
+            <a
+              href={previewImages.after}
+              download="renovated-room.jpg"
+              className="flex items-center gap-2 text-zinc-500 hover:text-zinc-300 transition-colors text-sm font-medium"
+            >
+              <ImageIcon size={16} />
+              Download result only (.jpg)
+            </a>
           </div>
 
           <button
