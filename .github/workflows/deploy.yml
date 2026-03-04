@@ -71,11 +71,16 @@ jobs:
             tar -xzf release.tar.gz
             rm release.tar.gz
             
+            # Set env vars so Next.js listens on all interfaces
+            export HOSTNAME=0.0.0.0
+            export PORT=3000
+            export NEXT_PUBLIC_BASE_URL=http://${{ secrets.SSH_HOST }}:3000
+            
             # Restart the app
             if pm2 describe reno-app > /dev/null 2>&1; then
               pm2 reload reno-app --update-env --time
             else
-              pm2 start server.js --name "reno-app" --time
+              PORT=3000 HOSTNAME=0.0.0.0 pm2 start server.js --name "reno-app" --time
             fi
             echo "✅ Deployment complete!"
 

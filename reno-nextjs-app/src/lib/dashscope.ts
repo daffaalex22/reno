@@ -2,6 +2,7 @@
  * Alibaba Cloud DashScope (Singapore) API wrapper
  * Covers: qwen-image-2.0-pro (image edit), wan2.1-kf2v-plus, qwen-max, qwen3-tts-flash
  */
+import sharp from "sharp";
 
 const BASE_URL = "https://dashscope-intl.aliyuncs.com/api/v1";
 
@@ -16,6 +17,9 @@ function getHeaders(async = false): Record<string, string> {
 
 /** Sleep helper */
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+
+
 
 /** Poll a task until SUCCEEDED or FAILED */
 export async function pollTask(taskId: string): Promise<Record<string, unknown>> {
@@ -199,11 +203,12 @@ export async function generateTTS(text: string): Promise<ArrayBuffer> {
 
 // ─────────────────────────────────────────────
 // Step 3: wan2.1-kf2v-plus (Keyframe to Video)
+// Accepts base64 JPEG strings — passed as data URIs, no upload needed.
 // Returns task_id
 // ─────────────────────────────────────────────
 export async function submitVideoGeneration(params: {
-  firstFrameUrl: string;
-  lastFrameUrl: string;
+  firstFrameBase64: string; // raw base64 string (no data: prefix)
+  lastFrameBase64: string;  // raw base64 string (no data: prefix)
   prompt?: string;
 }): Promise<string> {
   const res = await fetch(
@@ -214,8 +219,8 @@ export async function submitVideoGeneration(params: {
       body: JSON.stringify({
         model: "wan2.1-kf2v-plus",
         input: {
-          first_frame_url: params.firstFrameUrl,
-          last_frame_url: params.lastFrameUrl,
+          first_frame_url: `data:image/jpeg;base64,${params.firstFrameBase64}`,
+          last_frame_url: `data:image/jpeg;base64,${params.lastFrameBase64}`,
           prompt:
             params.prompt ||
             "A smooth cinematic transformation of a room interior, before and after renovation, seamless transition, high quality",

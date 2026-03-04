@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as fs from "fs";
 import * as path from "path";
+import sharp from "sharp";
 import {
   createJob,
   updateJob,
   toAbsoluteUrl,
   downloadToFile,
   saveBuffer,
-  UPLOADS_DIR,
 } from "@/lib/storage";
 import {
   submitImageEdit,
@@ -143,13 +143,26 @@ async function runPipeline(
       message: "Rendering transformation video...",
     });
 
-    // kf2v needs public URLs — use the original room photo's absolute URL
-    // and the renovated image URL (already a DashScope URL or our server URL)
-    const roomAbsoluteUrl = toAbsoluteUrl(params.roomImagePublicPath);
+    // The API accepts base64 data URIs directly — no upload needed.
+    // Convert both images to JPEG (strips alpha, ensures compatibility).
+    const roomJpegBase64 = (
+      await sharp(Buffer.from(roomBase64, "base64"))
+        .flatten({ background: { r: 255, g: 255, b: 255 } })
+        .jpeg({ quality: 95 })
+        .toBuffer()
+    ).toString("base64");
+
+    const renovatedRaw = fs.readFileSync(renovatedFilePath);
+    const renovatedJpegBase64 = (
+      await sharp(renovatedRaw)
+        .flatten({ background: { r: 255, g: 255, b: 255 } })
+        .jpeg({ quality: 95 })
+        .toBuffer()
+    ).toString("base64");
 
     const videoTaskId = await submitVideoGeneration({
-      firstFrameUrl: roomAbsoluteUrl,
-      lastFrameUrl: renovatedImageUrl, // use the original DashScope URL (still valid)
+      firstFrameBase64: roomJpegBase64,
+      lastFrameBase64: renovatedJpegBase64,
     });
 
     const videoResult = await pollTask(videoTaskId);
