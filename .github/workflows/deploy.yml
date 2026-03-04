@@ -76,6 +76,12 @@ jobs:
             export PORT=3000
             export NEXT_PUBLIC_BASE_URL=http://${{ secrets.SSH_HOST }}:3000
             
+            # Ensure ffmpeg is installed
+            if ! command -v ffmpeg > /dev/null 2>&1; then
+              echo "Installing ffmpeg..."
+              sudo apt-get update && sudo apt-get install -y ffmpeg
+            fi
+            
             # Restart the app
             if pm2 describe reno-app > /dev/null 2>&1; then
               pm2 reload reno-app --update-env --time
