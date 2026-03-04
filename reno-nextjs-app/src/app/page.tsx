@@ -346,26 +346,23 @@ export default function Home() {
             afterUrl={previewImages.after}
           />
 
-          <div className="grid grid-cols-1 sm:grid-cols-1 gap-4 mt-10">
+          <div className="grid grid-cols-1 gap-4 mt-10">
             <button
-              onClick={handleProceedToVideo}
+              onClick={openExportHub}
               className="group relative flex items-center justify-center gap-3 bg-accent hover:bg-black text-black hover:text-white border-2 border-accent px-8 py-6 rounded-2xl font-black text-xl transition-all shadow-[0_10px_30px_rgba(245,158,11,0.3)] hover:-translate-y-1 active:scale-95"
             >
-              <Play size={24} fill="currentColor" />
-              CREATE AI VIDEO
-              <div className="absolute -top-3 -right-3 bg-white text-black text-[10px] px-2 py-1 rounded-lg font-bold shadow-lg border border-zinc-200">
-                RECOMMENDED
-              </div>
+              <Share2 size={24} />
+              SHARE WITH FRIENDS ✨
             </button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
             <button
-              onClick={openExportHub}
-              className="flex items-center justify-center gap-2 bg-white text-black hover:bg-zinc-100 border border-zinc-200 px-4 py-4 rounded-2xl font-bold transition-all active:scale-95 shadow-lg shadow-white/5"
+              onClick={handleProceedToVideo}
+              className="flex items-center justify-center gap-2 bg-white text-black hover:bg-zinc-100 border border-zinc-200 px-4 py-4 rounded-2xl font-bold transition-all active:scale-95"
             >
-              <Share2 size={20} />
-              Export Image ✨
+              <Play size={20} fill="currentColor" />
+              Create AI Video
             </button>
             <button
               onClick={handleReset}
@@ -475,7 +472,7 @@ export default function Home() {
 
                   <div className="flex-1">
                     <h4 className="text-lg font-bold text-white mb-1 tracking-tight">Comparison Split (16:9)</h4>
-                    <p className="text-sm text-zinc-400 mb-4 tracking-tight">Perfect for X (Twitter), Facebook or Pinterest posts.</p>
+                    <p className="text-sm text-zinc-400 mb-4 tracking-tight">Perfect for X (Twitter), Facebook or Pinterest. <br /><span className="text-accent/80 font-medium italic">Captures current slider position.</span></p>
                     <div className="flex gap-2">
                       <button
                         onClick={() => {
