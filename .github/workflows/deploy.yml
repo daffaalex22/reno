@@ -35,9 +35,10 @@ jobs:
           
           STANDALONE_DIR="reno-nextjs-app/.next/standalone"
           if [ -f "$STANDALONE_DIR/server.js" ]; then
-            cp -r $STANDALONE_DIR/* deploy/
+            # Use /. instead of /* to include hidden dirs like .next
+            cp -r $STANDALONE_DIR/. deploy/
           elif [ -f "$STANDALONE_DIR/reno-nextjs-app/server.js" ]; then
-            cp -r $STANDALONE_DIR/reno-nextjs-app/* deploy/
+            cp -r $STANDALONE_DIR/reno-nextjs-app/. deploy/
             [ -d "$STANDALONE_DIR/node_modules" ] && cp -r $STANDALONE_DIR/node_modules deploy/
           fi
 
