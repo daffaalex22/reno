@@ -77,9 +77,8 @@ export async function POST(req: NextRequest) {
 
     // ── Initial Request (Part 1): Image Only ──────────────────────
     const job = createJob();
-    const roomImageUrl = toAbsoluteUrl(roomImagePublicPath);
     updateJob(job.id, { 
-      roomImageUrl, 
+      roomImageUrl: roomImagePublicPath, 
       style: style!, 
       customPrompt,
       message: `Preparing transformation...` 
@@ -124,10 +123,9 @@ async function runPart1(
     if (!renovatedImageUrl) throw new Error("No renovated image URL from Qwen Image Edit");
 
     const { publicPath: renovatedPublicPath } = await downloadToFile(renovatedImageUrl, "jpg", "renovated");
-    const renovatedAbsoluteUrl = toAbsoluteUrl(renovatedPublicPath);
 
     updateJob(jobId, { 
-      renovatedImageUrl: renovatedAbsoluteUrl,
+      renovatedImageUrl: renovatedPublicPath,
       status: "preview", 
       message: "Image ready for preview",
       finishedAt: Date.now(),
@@ -175,10 +173,15 @@ async function runPart2(
       message: "Rendering transformation video...",
     });
 
-    // Resolve local file paths from public URLs
-    const getLocalPath = (url: string) => {
-      const urlObj = new URL(url);
-      return path.join(process.cwd(), "public", urlObj.pathname);
+    // Resolve local file paths from public URLs or relative paths
+    const getLocalPath = (urlOrPath: string) => {
+      let pathname = urlOrPath;
+      try {
+        pathname = new URL(urlOrPath).pathname;
+      } catch (e) {
+        // already relative path
+      }
+      return path.join(process.cwd(), "public", pathname);
     };
 
     const roomFilePath = getLocalPath(job.roomImageUrl);
@@ -208,13 +211,12 @@ async function runPart2(
     });
 
     const { publicPath: finalPublicPath } = await mergeVideoAndAudio(videoFilePath, audioFilePath);
-    const finalVideoUrl = toAbsoluteUrl(finalPublicPath);
 
     updateJob(jobId, {
       status: "done",
       step: 3,
       message: "Finish!",
-      videoUrl: finalVideoUrl,
+      videoUrl: finalPublicPath,
       finishedAt: Date.now(),
     });
   } catch (err) {
