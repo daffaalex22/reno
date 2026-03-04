@@ -4,7 +4,7 @@
 
 const CONFIG = {
   TASK_URL: 'https://dashscope-intl.aliyuncs.com/api/v1/tasks',
-  API_KEY: process.env.API_KEY || 'sk-465ffc60a43343059ef673cb7857a3ee',
+  API_KEY: process.env.API_KEY || 'your_api_key_here',
 };
 
 async function getTaskResult(taskId: string) {

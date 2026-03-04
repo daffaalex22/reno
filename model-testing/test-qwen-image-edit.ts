@@ -59,7 +59,7 @@ const CONFIG = {
   // Singapore region endpoint (multimodal-generation, NOT image2image)
   API_URL:
     'https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation',
-  API_KEY: process.env.API_KEY || 'sk-465ffc60a43343059ef673cb7857a3ee',
+  API_KEY: process.env.API_KEY || 'your_api_key_here',
 };
 
 // ─── Core API call ────────────────────────────────────────────────────────────

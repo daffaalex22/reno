@@ -43,7 +43,7 @@ const CONFIG = {
   // Task status polling endpoint
   TASK_URL: 'https://dashscope-intl.aliyuncs.com/api/v1/tasks',
   // Replace with your actual API key
-  API_KEY: process.env.API_KEY || 'sk-465ffc60a43343059ef673cb7857a3ee',
+  API_KEY: process.env.API_KEY || 'your_api_key_here',
   // Polling interval in milliseconds (recommended: 15 seconds)
   POLL_INTERVAL_MS: 15000,
   // Maximum polling attempts (24 hours / 15 seconds = 5760)
