@@ -31,26 +31,21 @@ jobs:
 
       - name: Prepare Deployment Files
         run: |
-          mkdir -p deploy
-
-          # Next.js standalone output mirrors the repo structure when built from a subdirectory.
-          # server.js may be at .next/standalone/ or .next/standalone/reno-nextjs-app/
+          mkdir -p deploy/.next
+          
           STANDALONE_DIR="reno-nextjs-app/.next/standalone"
           if [ -f "$STANDALONE_DIR/server.js" ]; then
             cp -r $STANDALONE_DIR/* deploy/
           elif [ -f "$STANDALONE_DIR/reno-nextjs-app/server.js" ]; then
             cp -r $STANDALONE_DIR/reno-nextjs-app/* deploy/
-            # Also copy node_modules from the standalone root if present
             [ -d "$STANDALONE_DIR/node_modules" ] && cp -r $STANDALONE_DIR/node_modules deploy/
-          else
-            echo "❌ Could not find server.js in standalone output"
-            find $STANDALONE_DIR -name "server.js" || true
-            exit 1
           fi
 
-          mkdir -p deploy/.next
           cp -r reno-nextjs-app/.next/static deploy/.next/static
           cp -r reno-nextjs-app/public deploy/public
+          
+          # Compress to a single file to speed up transfer
+          tar -czf release.tar.gz -C deploy .
 
       - name: Deploy to VPS via SSH
         uses: appleboy/scp-action@v0.1.7
@@ -58,9 +53,8 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
-          source: "deploy/*"
+          source: "release.tar.gz"
           target: "~/reno-deploy"
-          strip_components: 1
 
       - name: Restart PM2 on VPS
         uses: appleboy/ssh-action@v1.2.0
@@ -71,7 +65,12 @@ jobs:
           script: |
             set -e
             cd ~/reno-deploy
-            # pm2 describe returns non-zero if app doesn't exist, so disable set -e for this check
+            
+            # Extract the archive
+            tar -xzf release.tar.gz
+            rm release.tar.gz
+            
+            # Restart the app
             if pm2 describe reno-app > /dev/null 2>&1; then
               pm2 reload reno-app --update-env
             else
