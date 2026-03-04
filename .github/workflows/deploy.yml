@@ -1,0 +1,55 @@
+name: Deploy to Alibaba Cloud VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          # If you use SSH Keys (recommended), use key: ${{ secrets.SSH_KEY }} instead of password
+          script: |
+            set -e  # Exit immediately on any command failure
+            
+            # 1. Navigate to the project root directory
+            cd ~/reno || { echo "❌ Failed to cd to project directory"; exit 1; }
+            
+            echo "📥 Pulling latest changes..."
+            if ! git pull origin main; then
+              echo "❌ Git pull failed"
+              exit 1
+            fi
+            
+            # 2. Navigate to the Next.js app directory
+            cd reno-nextjs-app
+            
+            echo "📦 Installing dependencies..."
+            if ! npm ci; then
+              echo "❌ npm ci failed"
+              exit 1
+            fi
+            
+            echo "🔨 Building application..."
+            if ! npm run build; then
+              echo "❌ Build failed"
+              exit 1
+            fi
+            
+            echo "🔄 Reloading PM2..."
+            if pm2 describe reno-app > /dev/null; then
+              pm2 reload reno-app --update-env
+            else
+              pm2 start npm --name "reno-app" -- start
+            fi
+            
+            echo "✅ Deployment complete!"
