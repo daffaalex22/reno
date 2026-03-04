@@ -124,9 +124,12 @@ export function ProgressStepper({
       <div className="mt-8">
         <div className="h-2 w-full bg-surface-border rounded-full overflow-hidden relative">
           <div 
-            className="absolute top-0 left-0 h-full bg-accent transition-all duration-500 ease-out" 
+            className="absolute top-0 left-0 h-full bg-gradient-to-r from-accent via-accent-hover to-accent transition-all duration-500 ease-out bg-[length:200%_100%] animate-gradient-x overflow-hidden" 
             style={{ width: `${Math.max(5, percentComplete)}%` }}
-          />
+          >
+            {/* Shimmer Overlay - Nested and enhanced to stay strictly within the yellow bar */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent animate-shimmer scale-x-125" />
+          </div>
         </div>
         <p className={`text-xs text-zinc-400 mt-3 text-center transition-opacity duration-300 ${fade ? "opacity-100" : "opacity-0"}`}>
           {LOADING_MESSAGES[messageIndex]}
