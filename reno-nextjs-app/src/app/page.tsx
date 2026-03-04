@@ -33,9 +33,9 @@ const PRESET_STYLE_URLS: Record<string, string> = {
 };
 
 const EXAMPLE_ROOMS = [
-  { id: "kos", label: "Kamar Kos", path: "/examples/indonesian-kos.png" },
-  { id: "kitchen", label: "Dapur Rumah", path: "/examples/indonesian-kitchen.png" },
-  { id: "living", label: "Ruang Tamu", path: "/examples/indonesian-living-room.png" },
+  { id: "kos", label: "Bedroom", path: "/examples/indonesian-kos.png" },
+  { id: "kitchen", label: "Home Kitchen", path: "/examples/indonesian-kitchen.png" },
+  { id: "living", label: "Living Room", path: "/examples/indonesian-living-room.png" },
 ];
 
 export default function Home() {
@@ -312,6 +312,36 @@ export default function Home() {
     }
   };
 
+  const handleDownloadVideo = () => {
+    if (!videoUrl) return;
+    const link = document.createElement("a");
+    link.href = videoUrl;
+    link.download = `reno-transformation-${Date.now()}.mp4`;
+    link.target = "_blank";
+    link.click();
+  };
+
+  const handleShareVideo = async () => {
+    if (!videoUrl) return;
+    try {
+      const blob = await (await fetch(videoUrl)).blob();
+      const file = new File([blob], "reno-transformation.mp4", { type: "video/mp4" });
+
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: "Check out my room transformation video!",
+          text: "I used Reno AI to redesign my room. Watch the transformation!",
+        });
+      } else {
+        handleDownloadVideo();
+      }
+    } catch (err) {
+      console.error("Video share failed", err);
+      handleDownloadVideo();
+    }
+  };
+
   const openExportHub = async () => {
     setIsExportModalOpen(true);
     // Generate previews after opening to keep it snappy
@@ -503,7 +533,7 @@ export default function Home() {
 
       {appState === "result" && (
         <div className="w-full animate-in fade-in slide-in-from-bottom-8 duration-700">
-          <VideoResult videoUrl={videoUrl} onReset={requestReset} />
+          <VideoResult videoUrl={videoUrl} onReset={requestReset} onShareClick={openExportHub} />
         </div>
       )}
 
@@ -511,25 +541,67 @@ export default function Home() {
       {isExportModalOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300" onClick={() => setIsExportModalOpen(false)}>
           <div
-            className="bg-surface border border-surface-border rounded-3xl p-6 md:p-8 w-full max-w-xl shadow-2xl animate-in zoom-in-95 duration-300"
+            className={`bg-surface border border-surface-border rounded-3xl w-full max-w-xl shadow-2xl animate-in zoom-in-95 duration-300 ${videoUrl ? 'p-5 max-h-[90vh] overflow-y-auto' : 'p-6 md:p-8'}`}
             onClick={e => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-black italic uppercase tracking-tight">Export <span className="text-accent">Hub</span></h3>
-              <button onClick={() => setIsExportModalOpen(false)} className="text-zinc-500 hover:text-white transition-colors">
+              <button onClick={() => setIsExportModalOpen(false)} className="cursor-pointer text-zinc-500 hover:text-white transition-colors">
                 <X size={24} />
               </button>
             </div>
 
-            <div className="flex flex-col gap-6">
-              {/* Story Card - HIGHLIGHTED */}
-              <div className="relative group bg-gradient-to-br from-zinc-800 to-zinc-900 border-2 border-accent p-6 rounded-2xl shadow-[0_0_30px_rgba(245,158,11,0.1)]">
-                <div className="absolute -top-3 right-6 bg-accent text-black text-[10px] font-black px-2 py-1 rounded-md uppercase tracking-tighter shadow-lg">
-                  Best for Social
+            <div className={`flex flex-col ${videoUrl ? 'gap-3' : 'gap-6'}`}>
+              {/* Video Card - shown when video is available */}
+              {videoUrl && (
+                <div className="relative group bg-gradient-to-br from-zinc-800 to-zinc-900 border-2 border-accent p-4 rounded-2xl shadow-[0_0_30px_rgba(245,158,11,0.1)]">
+                  <div className="absolute -top-3 right-6 bg-accent text-black text-[10px] font-black px-2 py-1 rounded-md uppercase tracking-tighter shadow-lg">
+                    Best for Social
+                  </div>
+                  <div className="flex items-start gap-4">
+                    {/* Preview Thumbnail */}
+                    <div className="w-24 h-18 bg-zinc-800 rounded-lg overflow-hidden border border-accent/20 flex-shrink-0 flex items-center justify-center">
+                      <video src={videoUrl} muted className="w-full h-full object-cover" />
+                    </div>
+
+                    <div className="flex-1">
+                      <h4 className="text-base font-bold text-white mb-1">Transformation Video</h4>
+                      <p className="text-xs text-zinc-400 mb-2 tracking-tight">Cinematic before/after clip. <span className="text-accent/80 font-medium italic">Perfect for Reels, TikTok & YouTube Shorts.</span></p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            handleDownloadVideo();
+                            setIsExportModalOpen(false);
+                          }}
+                          className="cursor-pointer flex-1 bg-accent hover:bg-black text-black hover:text-white border-2 border-accent py-2.5 rounded-xl font-bold transition-all text-sm"
+                        >
+                          Download
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleShareVideo();
+                            setIsExportModalOpen(false);
+                          }}
+                          className="cursor-pointer bg-accent/20 hover:bg-accent text-accent hover:text-black border border-accent/30 p-2.5 rounded-xl transition-all"
+                          title="Share"
+                        >
+                          <Share2 size={18} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
+              )}
+              {/* Story Card - HIGHLIGHTED */}
+              <div className={`relative group bg-gradient-to-br from-zinc-800 to-zinc-900 ${videoUrl ? 'border border-surface-border p-4' : 'border-2 border-accent p-6 shadow-[0_0_30px_rgba(245,158,11,0.1)]'} rounded-2xl`}>
+                {!videoUrl && (
+                  <div className="absolute -top-3 right-6 bg-accent text-black text-[10px] font-black px-2 py-1 rounded-md uppercase tracking-tighter shadow-lg">
+                    Best for Social
+                  </div>
+                )}
                 <div className="flex items-start gap-4">
                   {/* Preview Thumbnail */}
-                  <div className="w-24 h-40 bg-zinc-800 rounded-lg overflow-hidden border border-accent/20 flex-shrink-0 flex items-center justify-center">
+                  <div className={`${videoUrl ? 'w-16 h-16' : 'w-24 h-40'} bg-zinc-800 rounded-lg overflow-hidden border border-accent/20 flex-shrink-0 flex items-center justify-center`}>
                     {exportPreviews.story ? (
                       <img src={exportPreviews.story} alt="Story Preview" className="w-full h-full object-cover" />
                     ) : (
@@ -538,15 +610,15 @@ export default function Home() {
                   </div>
 
                   <div className="flex-1">
-                    <h4 className="text-lg font-bold text-white mb-1">Social Story Card (9:16)</h4>
-                    <p className="text-sm text-zinc-400 mb-4 tracking-tight">Optimized for Instagram, WhatsApp, TikTok & Snapchat Stories.</p>
+                    <h4 className={`${videoUrl ? 'text-base' : 'text-lg'} font-bold text-white mb-1`}>Social Story Card (9:16)</h4>
+                    <p className={`text-xs text-zinc-400 ${videoUrl ? 'mb-2' : 'mb-4'} tracking-tight`}>{videoUrl ? 'Instagram, TikTok & Stories.' : 'Optimized for Instagram, WhatsApp, TikTok & Snapchat Stories.'}</p>
                     <div className="flex gap-2">
                       <button
                         onClick={() => {
                           handleDownloadStoryCard();
                           setIsExportModalOpen(false);
                         }}
-                        className="flex-1 bg-accent hover:bg-black text-black hover:text-white border-2 border-accent py-2.5 rounded-xl font-bold transition-all text-sm"
+                        className={`cursor-pointer flex-1 ${videoUrl ? 'bg-surface hover:bg-surface-hover border border-surface-border text-white' : 'bg-accent hover:bg-black text-black hover:text-white border-2 border-accent'} py-2.5 rounded-xl font-bold transition-all text-sm`}
                       >
                         Download
                       </button>
@@ -555,7 +627,7 @@ export default function Home() {
                           handleShareStoryCard();
                           setIsExportModalOpen(false);
                         }}
-                        className="bg-accent/20 hover:bg-accent text-accent hover:text-black border border-accent/30 p-2.5 rounded-xl transition-all"
+                        className={`cursor-pointer ${videoUrl ? 'bg-surface hover:bg-surface-hover border border-surface-border text-white' : 'bg-accent/20 hover:bg-accent text-accent hover:text-black border border-accent/30'} p-2.5 rounded-xl transition-all`}
                         title="Share"
                       >
                         <Share2 size={18} />
@@ -566,10 +638,10 @@ export default function Home() {
               </div>
 
               {/* Comparison Split */}
-              <div className="bg-zinc-900/50 border border-surface-border p-6 rounded-2xl hover:border-zinc-700 transition-colors">
+              <div className={`bg-zinc-900/50 border border-surface-border ${videoUrl ? 'p-4' : 'p-6'} rounded-2xl hover:border-zinc-700 transition-colors`}>
                 <div className="flex items-start gap-4">
                   {/* Preview Thumbnail */}
-                  <div className="w-24 h-18 bg-zinc-800 rounded-lg overflow-hidden border border-surface-border flex-shrink-0 flex items-center justify-center">
+                  <div className={`${videoUrl ? 'w-16 h-10' : 'w-24 h-18'} bg-zinc-800 rounded-lg overflow-hidden border border-surface-border flex-shrink-0 flex items-center justify-center`}>
                     {exportPreviews.comparison ? (
                       <img src={exportPreviews.comparison} alt="Split Preview" className="w-full h-full object-cover" />
                     ) : (
@@ -578,15 +650,15 @@ export default function Home() {
                   </div>
 
                   <div className="flex-1">
-                    <h4 className="text-lg font-bold text-white mb-1 tracking-tight">Comparison Split (16:9)</h4>
-                    <p className="text-sm text-zinc-400 mb-4 tracking-tight">Perfect for X (Twitter), Facebook or Pinterest. <br /><span className="text-accent/80 font-medium italic">Captures a classic 50/50 balance.</span></p>
+                    <h4 className={`${videoUrl ? 'text-base' : 'text-lg'} font-bold text-white mb-1 tracking-tight`}>Comparison Split (16:9)</h4>
+                    <p className={`text-xs text-zinc-400 ${videoUrl ? 'mb-2' : 'mb-4'} tracking-tight`}>{videoUrl ? 'X, Facebook or Pinterest.' : <>Perfect for X (Twitter), Facebook or Pinterest. <br /><span className="text-accent/80 font-medium italic">Captures a classic 50/50 balance.</span></>}</p>
                     <div className="flex gap-2">
                       <button
                         onClick={() => {
                           handleDownloadComparison();
                           setIsExportModalOpen(false);
                         }}
-                        className="flex-1 bg-surface hover:bg-surface-hover border border-surface-border text-white py-2.5 rounded-xl font-bold transition-all text-sm whitespace-nowrap"
+                        className="cursor-pointer flex-1 bg-surface hover:bg-surface-hover border border-surface-border text-white py-2.5 rounded-xl font-bold transition-all text-sm whitespace-nowrap"
                       >
                         Download
                       </button>
@@ -595,7 +667,7 @@ export default function Home() {
                           handleShareComparison();
                           setIsExportModalOpen(false);
                         }}
-                        className="bg-surface hover:bg-surface-hover border border-surface-border text-white p-2.5 rounded-xl font-bold transition-all"
+                        className="cursor-pointer bg-surface hover:bg-surface-hover border border-surface-border text-white p-2.5 rounded-xl font-bold transition-all"
                         title="Share"
                       >
                         <Share2 size={18} />
@@ -606,7 +678,7 @@ export default function Home() {
               </div>
             </div>
 
-            <p className="text-center text-[10px] text-zinc-600 mt-8 uppercase tracking-[0.2em] font-black italic">
+            <p className={`text-center text-[10px] text-zinc-600 ${videoUrl ? 'mt-4' : 'mt-8'} uppercase tracking-[0.2em] font-black italic`}>
               Select your style to continue
             </p>
           </div>
@@ -641,13 +713,13 @@ export default function Home() {
               <div className="flex flex-col w-full gap-3 mt-8">
                 <button
                   onClick={confirmVideoGeneration}
-                  className="w-full bg-accent hover:bg-black text-black hover:text-white border-2 border-accent py-4 rounded-2xl font-black transition-all shadow-lg active:scale-95"
+                  className="cursor-pointer w-full bg-accent hover:bg-black text-black hover:text-white border-2 border-accent py-4 rounded-2xl font-black transition-all shadow-lg active:scale-95"
                 >
                   START VIDEO GENERATION
                 </button>
                 <button
                   onClick={() => setIsVideoWarningModalOpen(false)}
-                  className="w-full text-zinc-500 hover:text-white transition-colors py-2 text-sm font-bold"
+                  className="cursor-pointer w-full text-zinc-500 hover:text-white transition-colors py-2 text-sm font-bold"
                 >
                   Go Back
                 </button>
@@ -681,13 +753,13 @@ export default function Home() {
                     setIsResetWarningModalOpen(false);
                     handleReset();
                   }}
-                  className="w-full bg-red-500 hover:bg-red-600 text-white py-4 rounded-2xl font-black transition-all shadow-lg active:scale-95"
+                  className="cursor-pointer w-full bg-red-500 hover:bg-red-600 text-white py-4 rounded-2xl font-black transition-all shadow-lg active:scale-95"
                 >
                   START OVER
                 </button>
                 <button
                   onClick={() => setIsResetWarningModalOpen(false)}
-                  className="w-full text-zinc-500 hover:text-white transition-colors py-2 text-sm font-bold"
+                  className="cursor-pointer w-full text-zinc-500 hover:text-white transition-colors py-2 text-sm font-bold"
                 >
                   Cancel
                 </button>
