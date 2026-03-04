@@ -197,6 +197,10 @@ async function runPart2(
       lastFrameBase64: renovatedJpegBase64,
     });
 
+    console.log(`[pipeline:p2][${jobId}] Video task submitted: ${videoTaskId}`);
+    updateJob(jobId, { taskId: videoTaskId });
+
+    console.log(`[pipeline:p2][${jobId}] Polling task ${videoTaskId}...`);
     const videoResult = await pollTask(videoTaskId);
     const rawVideoUrl = (videoResult.output_video || videoResult.video_url || videoResult.url) as string;
     if (!rawVideoUrl) throw new Error("No video URL from API");

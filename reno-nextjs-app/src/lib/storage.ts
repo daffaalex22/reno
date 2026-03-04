@@ -102,6 +102,7 @@ export interface Job {
   renovatedImageUrl?: string;
   style?: string;
   customPrompt?: string;
+  taskId?: string; // Alibaba Cloud DashScope Task ID
   error?: string;
   createdAt: number;
   finishedAt?: number;

@@ -31,6 +31,7 @@ export async function pollTask(taskId: string): Promise<Record<string, unknown>>
     if (!res.ok) throw new Error(`Poll failed: HTTP ${res.status}`);
     const data = await res.json();
     const status = data.output?.task_status;
+    console.log(`[DashScope:Poll] Task ${taskId} is ${status}...`);
     if (status === "SUCCEEDED") return data.output;
     if (status === "FAILED")
       throw new Error(`Task failed: ${data.output?.message || "unknown"}`);
@@ -234,5 +235,7 @@ export async function submitVideoGeneration(params: {
     throw new Error(`Video submit failed: ${JSON.stringify(err)}`);
   }
   const data = await res.json();
-  return data.output.task_id as string;
+  const taskId = data.output.task_id as string;
+  console.log(`[DashScope] Video generation task created: ${taskId}`);
+  return taskId;
 }
