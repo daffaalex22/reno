@@ -113,7 +113,10 @@ export function ProgressStepper({
                  isActive ? <Loader2 size={16} className="animate-spin" /> : 
                  <span className="text-xs font-bold">{index + 1}</span>}
               </div>
-              <span className={`text-sm font-medium ${isActive || isCompleted ? "text-foreground" : "text-zinc-500"}`}>
+              <span className={`text-sm font-medium ${isActive ? "text-shimmer-silver font-bold" :
+                isCompleted ? "text-foreground" :
+                  "text-zinc-500"
+                }`}>
                 {step.label} {isActive && "..."}
               </span>
             </div>

@@ -722,24 +722,30 @@ export default function Home() {
           <div className={`bg-surface border border-surface-border rounded-3xl p-8 w-full max-w-md shadow-2xl transition-all duration-300 ${isVideoWarningModalVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-6 scale-95'
             }`}>
             <div className="flex flex-col items-center text-center">
-              <h3 className="text-2xl font-black italic uppercase tracking-tight mb-4">Patience is <span className="text-gradient-animated">Key</span></h3>
-              <div className="mt-4 p-3 bg-amber-500/5 rounded-xl border border-amber-500/10 flex items-center gap-3">
-                <Clock size={16} className="text-accent" />
-                <p className="text-[10px] text-zinc-400">
-                  <span className="text-white">Progress is saved!</span> Feel free to close this tab. Come back later and your video will be waiting.
+              <h3 className="text-2xl font-black italic uppercase tracking-tight mb-2">Patience is <span className="text-gradient-animated">Key</span></h3>
+              <p className="text-zinc-400 text-sm mb-8">Cinematic AI generation takes time.</p>
+
+              <div className="w-full bg-zinc-900/50 border border-white/5 rounded-2xl p-6 mb-8">
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center text-accent mb-2">
+                    <Clock size={24} />
+                  </div>
+                  <p className="text-white font-bold text-lg">10-15 Minutes Wait</p>
+                  <p className="text-[10px] text-zinc-500 uppercase tracking-[0.2em]">Alibaba Cloud Infrastructure</p>
+                </div>
+              </div>
+
+              <div className="space-y-4 text-zinc-400 text-sm leading-relaxed px-2">
+                <p>
+                  We recommend <span className="text-white font-medium">sharing the image first</span> while the AI works its magic.
                 </p>
               </div>
-              <div className="space-y-4 text-zinc-400 text-sm leading-relaxed">
-                <p>
-                  Creating a cinematic AI video is extremely compute-intensive.
-                </p>
-                <div className="bg-zinc-900/50 p-4 rounded-xl border border-white/5">
-                  <p className="font-bold text-white mb-1">Expect a wait of 10-15 minutes.</p>
-                  <p className="text-[10px] uppercase tracking-widest text-zinc-500">Alibaba Cloud Infrastructure Limitation</p>
+
+              <div className="mt-8 pt-6 border-t border-white/5 w-full">
+                <div className="flex items-center justify-center gap-2 text-zinc-500">
+                  <Sparkles size={12} className="text-accent" />
+                  <p className="text-[10px] uppercase tracking-widest font-bold">Progress is automatically saved</p>
                 </div>
-                <p>
-                  We recommend <span className="text-white font-medium">sharing the image first</span> while the AI works its magic in the background.
-                </p>
               </div>
 
               <div className="flex flex-col w-full gap-3 mt-8">

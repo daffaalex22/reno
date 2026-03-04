@@ -69,6 +69,11 @@ button:disabled {
   100% { background-position: 0% 50%; }
 }
 
+@keyframes text-shimmer {
+  from { background-position: 0% 0; }
+  to { background-position: 100% 0; }
+}
+
 .animate-shimmer {
   animation: shimmer 2s infinite;
 }
@@ -84,4 +89,19 @@ button:disabled {
   background-size: 200% auto;
   animation: gradient-x 3s ease infinite;
   background-image: linear-gradient(to right, var(--color-accent), #fcd34d, var(--color-accent));
+}
+.text-shimmer-silver {
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  background-size: 300% 100%;
+  animation: text-shimmer 3.5s linear infinite;
+  background-image: linear-gradient(
+    to right, 
+    #71717a 0%, 
+    #71717a 35%, 
+    #d4d4d8 50%, 
+    #71717a 65%, 
+    #71717a 100%
+  );
 }
