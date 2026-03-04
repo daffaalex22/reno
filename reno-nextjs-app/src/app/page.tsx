@@ -384,13 +384,7 @@ export default function Home() {
             </a>
           </div>
 
-          <button
-            onClick={handleReset}
-            className="w-full mt-8 flex items-center justify-center gap-2 text-zinc-500 hover:text-white transition-colors"
-          >
-            <RotateCcw size={16} />
-            <span className="text-sm font-medium">Clear and start over</span>
-          </button>
+
         </div>
       )}
 

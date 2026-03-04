@@ -1,4 +1,4 @@
-import { useState, useRef, useImperativeHandle, forwardRef } from "react";
+import { useState, useRef, useImperativeHandle, forwardRef, useEffect } from "react";
 import { MoveLeft, MoveRight } from "lucide-react";
 
 interface BeforeAfterSliderProps {
@@ -14,9 +14,60 @@ export interface BeforeAfterHandle {
 export const BeforeAfterSlider = forwardRef<BeforeAfterHandle, BeforeAfterSliderProps>(
   ({ beforeUrl, afterUrl }, ref) => {
     const [sliderPos, setSliderPos] = useState(50);
+    const [isAutoAnimating, setIsAutoAnimating] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
+    const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const animationIdRef = useRef(0); // For cancellation
+
+    // Auto-reveal logic
+    const startIdleTimer = () => {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      idleTimerRef.current = setTimeout(() => {
+        runAutoReveal();
+      }, 1000); // 1s of silence triggers the magic
+    };
+
+    const runAutoReveal = async () => {
+      const currentAnimationId = ++animationIdRef.current;
+      setIsAutoAnimating(true);
+
+      const checkValid = () => currentAnimationId === animationIdRef.current;
+
+      // Sequence: 0 -> 100 -> 50
+      if (!checkValid()) return;
+      setSliderPos(0);
+      await new Promise(r => setTimeout(r, 1200));
+
+      if (!checkValid()) return;
+      setSliderPos(100);
+      await new Promise(r => setTimeout(r, 1200));
+
+      if (!checkValid()) return;
+      setSliderPos(50);
+      await new Promise(r => setTimeout(r, 1200));
+
+      if (!checkValid()) return;
+      setIsAutoAnimating(false);
+      startIdleTimer(); // Re-queue next sweep
+    };
+
+    const stopAutoReveal = () => {
+      animationIdRef.current++; // Kill ongoing sweep
+      setIsAutoAnimating(false);
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      startIdleTimer(); // Reset the 1s countdown
+    };
+
+    useEffect(() => {
+      // Run immediately on first load
+      runAutoReveal();
+      return () => {
+        if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      };
+    }, []);
 
     useImperativeHandle(ref, () => ({
+      // ... (capture logic remains same)
       captureComparison: async () => {
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
@@ -194,6 +245,9 @@ export const BeforeAfterSlider = forwardRef<BeforeAfterHandle, BeforeAfterSlider
     }));
 
     const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      animationIdRef.current++; // Ensure no sweep starts while dragging
+      setIsAutoAnimating(false);
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
       setSliderPos(Number(e.target.value));
     };
 
@@ -201,6 +255,7 @@ export const BeforeAfterSlider = forwardRef<BeforeAfterHandle, BeforeAfterSlider
       <div
         ref={containerRef}
         className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl bg-zinc-900 select-none group"
+        onMouseEnter={stopAutoReveal}
       >
         {/* After Image (Background) */}
         <img
@@ -213,7 +268,10 @@ export const BeforeAfterSlider = forwardRef<BeforeAfterHandle, BeforeAfterSlider
         {/* Before Image (Foreground, clipped with clip-path) */}
         <div
           className="absolute inset-0 w-full h-full border-r-2 border-white/50 z-10 pointer-events-none"
-          style={{ clipPath: `inset(0 ${100 - sliderPos}% 0 0)` }}
+          style={{
+            clipPath: `inset(0 ${100 - sliderPos}% 0 0)`,
+            transition: isAutoAnimating ? "clip-path 1.2s cubic-bezier(0.4, 0, 0.2, 1)" : "none"
+          }}
         >
           <img
             src={beforeUrl}
@@ -236,7 +294,10 @@ export const BeforeAfterSlider = forwardRef<BeforeAfterHandle, BeforeAfterSlider
         {/* Custom Slider Handle */}
         <div
           className="absolute top-0 bottom-0 w-1 bg-white cursor-ew-resize pointer-events-none z-30"
-          style={{ left: `${sliderPos}%` }}
+          style={{
+            left: `${sliderPos}%`,
+            transition: isAutoAnimating ? "left 1.2s cubic-bezier(0.4, 0, 0.2, 1)" : "none"
+          }}
         >
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full shadow-xl flex items-center justify-center text-zinc-800">
             <div className="flex gap-0.5">
@@ -253,6 +314,18 @@ export const BeforeAfterSlider = forwardRef<BeforeAfterHandle, BeforeAfterSlider
           max="100"
           value={sliderPos}
           onChange={handleSliderChange}
+          onMouseDown={() => {
+            animationIdRef.current++; // Kill ongoing sweep
+            setIsAutoAnimating(false);
+            if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+          }}
+          onMouseUp={startIdleTimer}
+          onTouchStart={() => {
+            animationIdRef.current++;
+            setIsAutoAnimating(false);
+            if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+          }}
+          onTouchEnd={startIdleTimer}
           className="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize z-40"
         />
 
