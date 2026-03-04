@@ -24,6 +24,27 @@ body {
   min-height: 100vh;
 }
 
+/* Global Pointer Cursors */
+button, 
+select, 
+a, 
+summary,
+input[type="button"], 
+input[type="submit"], 
+input[type="reset"],
+input[type="checkbox"],
+input[type="radio"],
+[role="button"],
+[role="tab"],
+[role="menuitem"],
+label[for] {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
 }
