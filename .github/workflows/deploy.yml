@@ -6,50 +6,75 @@ on:
       - main
 
 jobs:
-  deploy:
-    name: Deploy to Production
-    runs-on: ubuntu-latest
+  build-and-deploy:
+    name: Build and Deploy
+    runs-on: blacksmith-2vcpu-ubuntu-2204
 
     steps:
-      - name: Deploy via SSH
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: reno-nextjs-app/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: reno-nextjs-app
+        run: npm ci
+
+      - name: Build Application
+        working-directory: reno-nextjs-app
+        run: npm run build
+
+      - name: Prepare Deployment Files
+        run: |
+          mkdir -p deploy
+
+          # Next.js standalone output mirrors the repo structure when built from a subdirectory.
+          # server.js may be at .next/standalone/ or .next/standalone/reno-nextjs-app/
+          STANDALONE_DIR="reno-nextjs-app/.next/standalone"
+          if [ -f "$STANDALONE_DIR/server.js" ]; then
+            cp -r $STANDALONE_DIR/* deploy/
+          elif [ -f "$STANDALONE_DIR/reno-nextjs-app/server.js" ]; then
+            cp -r $STANDALONE_DIR/reno-nextjs-app/* deploy/
+            # Also copy node_modules from the standalone root if present
+            [ -d "$STANDALONE_DIR/node_modules" ] && cp -r $STANDALONE_DIR/node_modules deploy/
+          else
+            echo "❌ Could not find server.js in standalone output"
+            find $STANDALONE_DIR -name "server.js" || true
+            exit 1
+          fi
+
+          cp -r reno-nextjs-app/.next/static deploy/.next/static
+          cp -r reno-nextjs-app/public deploy/public
+
+      - name: Deploy to VPS via SSH
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          source: "deploy/*"
+          target: "~/reno-deploy"
+          strip_components: 1
+
+      - name: Restart PM2 on VPS
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
-          # If you use SSH Keys (recommended), use key: ${{ secrets.SSH_KEY }} instead of password
           script: |
-            set -e  # Exit immediately on any command failure
-            
-            # 1. Navigate to the project root directory
-            cd ~/reno || { echo "❌ Failed to cd to project directory"; exit 1; }
-            
-            echo "📥 Pulling latest changes..."
-            if ! git pull origin main; then
-              echo "❌ Git pull failed"
-              exit 1
-            fi
-            
-            # 2. Navigate to the Next.js app directory
-            cd reno-nextjs-app
-            
-            echo "📦 Installing dependencies..."
-            if ! npm ci; then
-              echo "❌ npm ci failed"
-              exit 1
-            fi
-            
-            echo "🔨 Building application..."
-            if ! npm run build; then
-              echo "❌ Build failed"
-              exit 1
-            fi
-            
-            echo "🔄 Reloading PM2..."
-            if pm2 describe reno-app > /dev/null; then
+            set -e
+            cd ~/reno-deploy
+            # pm2 describe returns non-zero if app doesn't exist, so disable set -e for this check
+            if pm2 describe reno-app > /dev/null 2>&1; then
               pm2 reload reno-app --update-env
             else
-              pm2 start npm --name "reno-app" -- start
+              pm2 start server.js --name "reno-app"
             fi
-            
             echo "✅ Deployment complete!"
+
