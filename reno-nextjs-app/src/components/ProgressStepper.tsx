@@ -40,11 +40,13 @@ const LOADING_MESSAGES = [
 export function ProgressStepper({
   currentStep,
   startedAt,
-  finishedAt
+  finishedAt,
+  onCancel
 }: {
   currentStep: number;
   startedAt?: number | null;
   finishedAt?: number | null;
+    onCancel?: () => void;
 }) {
   const percentComplete = Math.min(100, (currentStep / STEPS.length) * 100);
   const [messageIndex, setMessageIndex] = useState(0);
@@ -157,6 +159,17 @@ export function ProgressStepper({
               <div className="py-1">
                 Generating cinematic videos requires massive compute. Our AI renders thousands of frames and generates a personalized voiceover.
                 <div className="mt-2 text-accent font-medium">Estimated wait: 10-15 minutes.</div>
+              </div>
+            )}
+
+            {onCancel && (
+              <div className="mt-4 pt-3 border-t border-zinc-800/50">
+                <button
+                  onClick={onCancel}
+                  className="text-red-500 hover:text-red-400 font-bold transition-colors w-full text-center py-2"
+                >
+                  Cancel and start over
+                </button>
               </div>
             )}
           </div>

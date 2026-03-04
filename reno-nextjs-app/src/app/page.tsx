@@ -431,7 +431,12 @@ export default function Home() {
 
       {appState === "loading" && (
         <div className="w-full flex-1 flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-500">
-          <ProgressStepper currentStep={currentStep} startedAt={jobCreatedAt} finishedAt={jobFinishedAt} />
+          <ProgressStepper
+            currentStep={currentStep}
+            startedAt={jobCreatedAt}
+            finishedAt={jobFinishedAt}
+            onCancel={requestReset}
+          />
         </div>
       )}
 
