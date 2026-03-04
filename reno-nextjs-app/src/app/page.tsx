@@ -52,8 +52,11 @@ export default function Home() {
   const [jobFinishedAt, setJobFinishedAt] = useState<number | null>(null);
   const [previewImages, setPreviewImages] = useState<{ before: string; after: string } | null>(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isExportModalVisible, setIsExportModalVisible] = useState(false);
   const [isVideoWarningModalOpen, setIsVideoWarningModalOpen] = useState(false);
+  const [isVideoWarningModalVisible, setIsVideoWarningModalVisible] = useState(false);
   const [isResetWarningModalOpen, setIsResetWarningModalOpen] = useState(false);
+  const [isResetWarningModalVisible, setIsResetWarningModalVisible] = useState(false);
   const [exportPreviews, setExportPreviews] = useState<{ comparison?: string; story?: string }>({});
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -192,10 +195,14 @@ export default function Home() {
 
   const handleProceedToVideo = () => {
     setIsVideoWarningModalOpen(true);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => setIsVideoWarningModalVisible(true));
+    });
   };
 
   const confirmVideoGeneration = async () => {
-    setIsVideoWarningModalOpen(false);
+    setIsVideoWarningModalVisible(false);
+    setTimeout(() => setIsVideoWarningModalOpen(false), 300);
     if (!jobId) return;
     setAppState("loading");
     setCurrentStep(1); // Resume at script step
@@ -236,9 +243,17 @@ export default function Home() {
   const requestReset = () => {
     if (appState !== "idle") {
       setIsResetWarningModalOpen(true);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => setIsResetWarningModalVisible(true));
+      });
     } else {
       handleReset();
     }
+  };
+
+  const closeResetWarning = () => {
+    setIsResetWarningModalVisible(false);
+    setTimeout(() => setIsResetWarningModalOpen(false), 300);
   };
 
   const handleDownloadComparison = async () => {
@@ -344,6 +359,10 @@ export default function Home() {
 
   const openExportHub = async () => {
     setIsExportModalOpen(true);
+    // Defer visibility to next frame so CSS transition fires
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => setIsExportModalVisible(true));
+    });
     // Generate previews after opening to keep it snappy
     if (sliderRef.current) {
       try {
@@ -356,6 +375,11 @@ export default function Home() {
         console.error("Preview generation failed", err);
       }
     }
+  };
+
+  const closeExportHub = () => {
+    setIsExportModalVisible(false);
+    setTimeout(() => setIsExportModalOpen(false), 300);
   };
 
   return (
@@ -537,16 +561,20 @@ export default function Home() {
         </div>
       )}
 
-      {/* Export Modal */}
       {isExportModalOpen && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300" onClick={() => setIsExportModalOpen(false)}>
+        <div
+          className={`fixed inset-0 flex items-center justify-center z-[100] p-4 transition-all duration-300 ${isExportModalVisible ? 'bg-black/80 backdrop-blur-sm' : 'bg-black/0 backdrop-blur-none'
+            }`}
+          onClick={closeExportHub}
+        >
           <div
-            className={`bg-surface border border-surface-border rounded-3xl w-full max-w-xl shadow-2xl animate-in zoom-in-95 duration-300 ${videoUrl ? 'p-5 max-h-[90vh] overflow-y-auto' : 'p-6 md:p-8'}`}
+            className={`bg-surface border border-surface-border rounded-3xl w-full max-w-xl shadow-2xl transition-all duration-300 ${isExportModalVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-6 scale-95'
+              } ${videoUrl ? 'p-5 max-h-[90vh] overflow-y-auto' : 'p-6 md:p-8'}`}
             onClick={e => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-black italic uppercase tracking-tight">Export <span className="text-gradient-animated">Hub</span></h3>
-              <button onClick={() => setIsExportModalOpen(false)} className="cursor-pointer text-zinc-500 hover:text-white transition-colors">
+              <button onClick={closeExportHub} className="cursor-pointer text-zinc-500 hover:text-white transition-colors">
                 <X size={24} />
               </button>
             </div>
@@ -571,7 +599,7 @@ export default function Home() {
                         <button
                           onClick={() => {
                             handleDownloadVideo();
-                            setIsExportModalOpen(false);
+                            closeExportHub();
                           }}
                           className="cursor-pointer flex-1 bg-accent hover:bg-black text-black hover:text-white border-2 border-accent py-2.5 rounded-xl font-bold transition-all text-sm"
                         >
@@ -580,7 +608,7 @@ export default function Home() {
                         <button
                           onClick={() => {
                             handleShareVideo();
-                            setIsExportModalOpen(false);
+                            closeExportHub();
                           }}
                           className="cursor-pointer bg-accent/20 hover:bg-accent text-accent hover:text-black border border-accent/30 p-2.5 rounded-xl transition-all"
                           title="Share"
@@ -616,7 +644,7 @@ export default function Home() {
                       <button
                         onClick={() => {
                           handleDownloadStoryCard();
-                          setIsExportModalOpen(false);
+                          closeExportHub();
                         }}
                         className={`cursor-pointer flex-1 ${videoUrl ? 'bg-surface hover:bg-surface-hover border border-surface-border text-white' : 'bg-accent hover:bg-black text-black hover:text-white border-2 border-accent'} py-2.5 rounded-xl font-bold transition-all text-sm`}
                       >
@@ -625,7 +653,7 @@ export default function Home() {
                       <button
                         onClick={() => {
                           handleShareStoryCard();
-                          setIsExportModalOpen(false);
+                          closeExportHub();
                         }}
                         className={`cursor-pointer ${videoUrl ? 'bg-surface hover:bg-surface-hover border border-surface-border text-white' : 'bg-accent/20 hover:bg-accent text-accent hover:text-black border border-accent/30'} p-2.5 rounded-xl transition-all`}
                         title="Share"
@@ -656,7 +684,7 @@ export default function Home() {
                       <button
                         onClick={() => {
                           handleDownloadComparison();
-                          setIsExportModalOpen(false);
+                          closeExportHub();
                         }}
                         className="cursor-pointer flex-1 bg-surface hover:bg-surface-hover border border-surface-border text-white py-2.5 rounded-xl font-bold transition-all text-sm whitespace-nowrap"
                       >
@@ -665,7 +693,7 @@ export default function Home() {
                       <button
                         onClick={() => {
                           handleShareComparison();
-                          setIsExportModalOpen(false);
+                          closeExportHub();
                         }}
                         className="cursor-pointer bg-surface hover:bg-surface-hover border border-surface-border text-white p-2.5 rounded-xl font-bold transition-all"
                         title="Share"
@@ -687,8 +715,12 @@ export default function Home() {
 
       {/* Video Warning Modal */}
       {isVideoWarningModalOpen && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300">
-          <div className="bg-surface border border-surface-border rounded-3xl p-8 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-300">
+        <div
+          className={`fixed inset-0 flex items-center justify-center z-[100] p-4 transition-all duration-300 ${isVideoWarningModalVisible ? 'bg-black/80 backdrop-blur-sm' : 'bg-black/0 backdrop-blur-none'
+            }`}
+        >
+          <div className={`bg-surface border border-surface-border rounded-3xl p-8 w-full max-w-md shadow-2xl transition-all duration-300 ${isVideoWarningModalVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-6 scale-95'
+            }`}>
             <div className="flex flex-col items-center text-center">
               <h3 className="text-2xl font-black italic uppercase tracking-tight mb-4">Patience is <span className="text-gradient-animated">Key</span></h3>
               <div className="mt-4 p-3 bg-amber-500/5 rounded-xl border border-amber-500/10 flex items-center gap-3">
@@ -718,7 +750,10 @@ export default function Home() {
                   START VIDEO GENERATION
                 </button>
                 <button
-                  onClick={() => setIsVideoWarningModalOpen(false)}
+                  onClick={() => {
+                    setIsVideoWarningModalVisible(false);
+                    setTimeout(() => setIsVideoWarningModalOpen(false), 300);
+                  }}
                   className="cursor-pointer w-full text-zinc-500 hover:text-white transition-colors py-2 text-sm font-bold"
                 >
                   Go Back
@@ -731,8 +766,12 @@ export default function Home() {
 
       {/* Reset Warning Modal */}
       {isResetWarningModalOpen && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300">
-          <div className="bg-surface border border-surface-border rounded-3xl p-8 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-300">
+        <div
+          className={`fixed inset-0 flex items-center justify-center z-[100] p-4 transition-all duration-300 ${isResetWarningModalVisible ? 'bg-black/80 backdrop-blur-sm' : 'bg-black/0 backdrop-blur-none'
+            }`}
+        >
+          <div className={`bg-surface border border-surface-border rounded-3xl p-8 w-full max-w-md shadow-2xl transition-all duration-300 ${isResetWarningModalVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-6 scale-95'
+            }`}>
             <div className="flex flex-col items-center text-center">
               <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center text-red-500 mb-6">
                 <AlertCircle size={32} />
@@ -750,7 +789,7 @@ export default function Home() {
               <div className="flex flex-col w-full gap-3">
                 <button
                   onClick={() => {
-                    setIsResetWarningModalOpen(false);
+                    closeResetWarning();
                     handleReset();
                   }}
                   className="cursor-pointer w-full bg-red-500 hover:bg-red-600 text-white py-4 rounded-2xl font-black transition-all shadow-lg active:scale-95"
@@ -758,7 +797,7 @@ export default function Home() {
                   START OVER
                 </button>
                 <button
-                  onClick={() => setIsResetWarningModalOpen(false)}
+                  onClick={closeResetWarning}
                   className="cursor-pointer w-full text-zinc-500 hover:text-white transition-colors py-2 text-sm font-bold"
                 >
                   Cancel
