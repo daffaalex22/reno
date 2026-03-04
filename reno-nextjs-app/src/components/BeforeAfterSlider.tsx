@@ -8,6 +8,7 @@ interface BeforeAfterSliderProps {
 
 export interface BeforeAfterHandle {
   captureComparison: () => Promise<string>;
+  captureStoryCard: () => Promise<string>;
 }
 
 export const BeforeAfterSlider = forwardRef<BeforeAfterHandle, BeforeAfterSliderProps>(
@@ -82,17 +83,113 @@ export const BeforeAfterSlider = forwardRef<BeforeAfterHandle, BeforeAfterSlider
         ctx.fillStyle = "black";
         ctx.fillText(afterText, canvas.width - afterWidth - padding - 20, 20 + padding);
 
-        // 5. Reno Branding (Bottom Right)
-        ctx.font = `bold ${fontSize * 1.2}px sans-serif`;
-        ctx.fillStyle = "white";
-        ctx.textAlign = "right";
-        ctx.textBaseline = "bottom";
-        // Subtle shadow for brand
-        ctx.shadowColor = "rgba(0,0,0,0.5)";
-        ctx.shadowBlur = 10;
-        ctx.fillText("Reno AI ✨", canvas.width - 20, canvas.height - 20);
+
 
         return canvas.toDataURL("image/jpeg", 0.95);
+      },
+      captureStoryCard: async () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        if (!ctx) throw new Error("Could not get canvas context");
+
+        // Standard 9:16 Portrait (1080x1920)
+        canvas.width = 1080;
+        canvas.height = 1920;
+
+        // Load images
+        const loadImage = (url: string) =>
+          new Promise<HTMLImageElement>((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+            img.src = url;
+          });
+
+        const [imgBefore, imgAfter] = await Promise.all([
+          loadImage(beforeUrl),
+          loadImage(afterUrl),
+        ]);
+
+        // 1. Draw Blurred Background (using the after image)
+        ctx.filter = "blur(50px) brightness(0.6)";
+        ctx.drawImage(imgAfter, -100, -100, canvas.width + 200, canvas.height + 200);
+        ctx.filter = "none";
+
+        // 2. Layout Constants
+        const margin = 60;
+        const cardWidth = canvas.width - margin * 2;
+        const cardHeight = (canvas.height - margin * 4) / 2;
+
+        // Helper to draw rounded image card
+        const drawRoundedImage = (img: HTMLImageElement, y: number, label: string, accent = false) => {
+          ctx.save();
+          // Draw card shadow
+          ctx.shadowColor = "rgba(0,0,0,0.4)";
+          ctx.shadowBlur = 40;
+          ctx.shadowOffsetY = 20;
+
+          // Clip path for rounded corners
+          const radius = 40;
+          ctx.beginPath();
+          ctx.moveTo(margin + radius, y);
+          ctx.lineTo(margin + cardWidth - radius, y);
+          ctx.quadraticCurveTo(margin + cardWidth, y, margin + cardWidth, y + radius);
+          ctx.lineTo(margin + cardWidth, y + cardHeight - radius);
+          ctx.quadraticCurveTo(margin + cardWidth, y + cardHeight, margin + cardWidth - radius, y + cardHeight);
+          ctx.lineTo(margin + radius, y + cardHeight);
+          ctx.quadraticCurveTo(margin, y + cardHeight, margin, y + cardHeight - radius);
+          ctx.lineTo(margin, y + radius);
+          ctx.quadraticCurveTo(margin, y, margin + radius, y);
+          ctx.closePath();
+          ctx.clip();
+
+          // Draw Image (Object-fit: cover implementation)
+          const imgRatio = img.width / img.height;
+          const cardRatio = cardWidth / cardHeight;
+          let sw, sh, sx, sy;
+          if (imgRatio > cardRatio) {
+            sh = img.height;
+            sw = sh * cardRatio;
+            sx = (img.width - sw) / 2;
+            sy = 0;
+          } else {
+            sw = img.width;
+            sh = sw / cardRatio;
+            sx = 0;
+            sy = (img.height - sh) / 2;
+          }
+          ctx.drawImage(img, sx, sy, sw, sh, margin, y, cardWidth, cardHeight);
+          ctx.restore();
+
+          // Draw Label Pill
+          ctx.save();
+          const fontSize = 48;
+          ctx.font = `bold ${fontSize}px sans-serif`;
+          const textWidth = ctx.measureText(label).width;
+          const pillPadding = 24;
+          const pillWidth = textWidth + pillPadding * 2;
+          const pillHeight = fontSize + pillPadding;
+          const pillX = margin + 30;
+          const pillY = y + 30;
+
+          ctx.fillStyle = accent ? "#f59e0b" : "rgba(0,0,0,0.7)";
+          ctx.beginPath();
+          ctx.roundRect(pillX, pillY, pillWidth, pillHeight, 16);
+          ctx.fill();
+
+          ctx.fillStyle = accent ? "black" : "white";
+          ctx.fillText(label, pillX + pillPadding, pillY + pillHeight - 14);
+          ctx.restore();
+        };
+
+        // Draw the stacks
+        drawRoundedImage(imgBefore, margin * 2, "BEFORE");
+        drawRoundedImage(imgAfter, cardHeight + margin * 2.5, "AFTER", true);
+
+
+
+        return canvas.toDataURL("image/jpeg", 0.9);
       },
     }));
 
