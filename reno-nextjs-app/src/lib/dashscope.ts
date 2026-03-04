@@ -51,10 +51,12 @@ export async function pollTask(taskId: string): Promise<Record<string, unknown>>
 /** Build a rich renovation prompt from a style name. */
 function buildRenovationPrompt(style: string): string {
   return (
-    `Renovate this room into a ${style} interior design style. ` +
-    `Transform the furniture, colors, textures, lighting, and decor to match ${style} aesthetics. ` +
-    `Keep the original room's architecture, layout, doors, and windows completely identical. ` +
-    `Do not add or remove any walls, windows, or structural elements.`
+    `Renovate this exact room into a ${style} interior design style. ` +
+    `This is a room renovation — do NOT change the room type or function. ` +
+    `Identify the type of space in the input image (e.g. bedroom, kitchen, living room, bathroom, office, cafe, outdoor space, or any other space type) and preserve that exact space type in the output. ` +
+    `Keep the same room type, same room layout, same architecture, same perspective angle, same walls, floors, windows, and doors. ` +
+    `Only change the furniture, colors, textures, lighting, and decorative elements to match the ${style} aesthetic. ` +
+    `Preserve all structural elements exactly. Do not add new rooms, do not expand the space, do not change the room's purpose.`
   );
 }
 
@@ -88,7 +90,7 @@ export async function submitImageEdit(params: {
       parameters: {
         n: 1,
         watermark: false,
-        negative_prompt: "blur, low quality, people, extra rooms, cartoonish",
+        negative_prompt: "blur, low quality, people, cartoonish, different room type, different room function, wrong room type, bedroom turned into living room, kitchen turned into bedroom, living room turned into kitchen, extra rooms, room expansion",
       },
     }),
   });
