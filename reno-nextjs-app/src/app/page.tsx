@@ -15,7 +15,8 @@ import {
   ImageIcon,
   Smartphone,
   X,
-  Clock
+  Clock,
+  AlertCircle
 } from "lucide-react";
 
 type AppState = "idle" | "loading" | "preview" | "result";
@@ -52,6 +53,7 @@ export default function Home() {
   const [previewImages, setPreviewImages] = useState<{ before: string; after: string } | null>(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isVideoWarningModalOpen, setIsVideoWarningModalOpen] = useState(false);
+  const [isResetWarningModalOpen, setIsResetWarningModalOpen] = useState(false);
   const [exportPreviews, setExportPreviews] = useState<{ comparison?: string; story?: string }>({});
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -231,6 +233,14 @@ export default function Home() {
     localStorage.removeItem("reno_active_job_at");
   };
 
+  const requestReset = () => {
+    if (appState !== "idle") {
+      setIsResetWarningModalOpen(true);
+    } else {
+      handleReset();
+    }
+  };
+
   const handleDownloadComparison = async () => {
     if (!sliderRef.current) return;
     try {
@@ -324,7 +334,7 @@ export default function Home() {
       <div className="w-full flex justify-between items-center mb-12 sm:mb-20">
         <div
           className="flex items-center gap-2 text-foreground font-bold tracking-tight cursor-pointer"
-          onClick={handleReset}
+          onClick={requestReset}
         >
           <div className="bg-accent text-black p-1.5 rounded-lg">
             <Sparkles size={16} />
@@ -463,7 +473,7 @@ export default function Home() {
               Create AI Video
             </button>
             <button
-              onClick={handleReset}
+              onClick={requestReset}
               className="flex items-center justify-center gap-2 bg-surface hover:bg-surface-hover border border-surface-border text-zinc-300 px-4 py-4 rounded-2xl font-bold transition-all hover:text-white active:scale-95"
             >
               <RotateCcw size={20} />
@@ -488,7 +498,7 @@ export default function Home() {
 
       {appState === "result" && (
         <div className="w-full animate-in fade-in slide-in-from-bottom-8 duration-700">
-          <VideoResult videoUrl={videoUrl} onReset={handleReset} />
+          <VideoResult videoUrl={videoUrl} onReset={requestReset} />
         </div>
       )}
 
@@ -635,6 +645,46 @@ export default function Home() {
                   className="w-full text-zinc-500 hover:text-white transition-colors py-2 text-sm font-bold"
                 >
                   Go Back
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reset Warning Modal */}
+      {isResetWarningModalOpen && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300">
+          <div className="bg-surface border border-surface-border rounded-3xl p-8 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center text-red-500 mb-6">
+                <AlertCircle size={32} />
+              </div>
+              <h3 className="text-2xl font-black italic uppercase tracking-tight mb-4">Are you <span className="text-red-500">sure?</span></h3>
+              <div className="space-y-4 text-zinc-400 text-sm leading-relaxed mb-8">
+                <p>
+                  {appState === "result"
+                    ? "Going back to the start will discard your generated video! Please make sure you have downloaded or shared it first as it will be permanently lost."
+                    : "Going back to the start will discard your current progress and remove this transformation from your session."
+                  }
+                </p>
+              </div>
+
+              <div className="flex flex-col w-full gap-3">
+                <button
+                  onClick={() => {
+                    setIsResetWarningModalOpen(false);
+                    handleReset();
+                  }}
+                  className="w-full bg-red-500 hover:bg-red-600 text-white py-4 rounded-2xl font-black transition-all shadow-lg active:scale-95"
+                >
+                  START OVER
+                </button>
+                <button
+                  onClick={() => setIsResetWarningModalOpen(false)}
+                  className="w-full text-zinc-500 hover:text-white transition-colors py-2 text-sm font-bold"
+                >
+                  Cancel
                 </button>
               </div>
             </div>
