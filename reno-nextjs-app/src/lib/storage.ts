@@ -88,6 +88,7 @@ export type JobStatus =
   | "step_tts"
   | "step_video"
   | "step_merge"
+  | "preview"
   | "done"
   | "error";
 
@@ -96,8 +97,11 @@ export interface Job {
   status: JobStatus;
   step: number; // 0-3 matching the UI stepper
   message: string;
+  roomImageUrl?: string; // Original photo
   videoUrl?: string;
   renovatedImageUrl?: string;
+  style?: string;
+  customPrompt?: string;
   error?: string;
   createdAt: number;
 }

@@ -9,10 +9,10 @@ interface Step {
 }
 
 const STEPS: Step[] = [
-  { id: 0, label: "Generating renovated room" },
-  { id: 1, label: "Creating AI narration" },
-  { id: 2, label: "Rendering cinematic video" },
-  { id: 3, label: "Finalizing and serving" },
+  { id: 0, label: "AI Room Reimagination" },
+  { id: 1, label: "AI Voiceover & Script" },
+  { id: 2, label: "Cinematic Video Physics" },
+  { id: 3, label: "Final Merging & Polish" },
 ];
 
 const LOADING_MESSAGES = [
@@ -38,7 +38,7 @@ const LOADING_MESSAGES = [
 ];
 
 export function ProgressStepper({ currentStep }: { currentStep: number }) {
-  const percentComplete = ((currentStep) / (STEPS.length - 1)) * 100;
+  const percentComplete = Math.min(100, (currentStep / STEPS.length) * 100);
   const [messageIndex, setMessageIndex] = useState(0);
   const [fade, setFade] = useState(true);
 

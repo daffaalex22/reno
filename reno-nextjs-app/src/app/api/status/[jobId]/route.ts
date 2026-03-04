@@ -19,6 +19,7 @@ export async function GET(
     status: job.status,
     step: job.step,
     message: job.message,
+    roomImageUrl: job.roomImageUrl,
     videoUrl: job.videoUrl,
     renovatedImageUrl: job.renovatedImageUrl,
     error: job.error,

@@ -4,10 +4,11 @@ import { useState, useRef, useCallback } from "react";
 import { ImageUploader } from "@/components/ImageUploader";
 import { StylePicker, StyleOption } from "@/components/StylePicker";
 import { ProgressStepper } from "@/components/ProgressStepper";
+import { BeforeAfterSlider } from "@/components/BeforeAfterSlider";
 import { VideoResult } from "@/components/VideoResult";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Play, Share2, Download, RotateCcw } from "lucide-react";
 
-type AppState = "idle" | "loading" | "result";
+type AppState = "idle" | "loading" | "preview" | "result";
 
 const PRESET_STYLE_URLS: Record<string, string> = {
   "Modern Minimalist": "/presets/modern-minimalist.png",
@@ -26,6 +27,8 @@ export default function Home() {
   const [currentStep, setCurrentStep] = useState(0);
   const [videoUrl, setVideoUrl] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+  const [jobId, setJobId] = useState("");
+  const [previewImages, setPreviewImages] = useState<{ before: string; after: string } | null>(null);
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -66,7 +69,6 @@ export default function Home() {
         const res = await styleUpload.json();
         stylePublicPath = res.publicPath;
       } else {
-        // Preset images are already on disk at /public/presets/
         stylePublicPath = PRESET_STYLE_URLS[selectedStyle as string];
       }
 
@@ -82,44 +84,77 @@ export default function Home() {
         }),
       });
       if (!genRes.ok) throw new Error("Failed to start generation");
-      const { jobId } = await genRes.json();
+      const { jobId: newJobId } = await genRes.json();
+      setJobId(newJobId);
 
-      // ── 4. Poll for status ────────────────────────────────────────
-      const STEP_MAP: Record<string, number> = {
-        step_image: 0,
-        step_script: 1,
-        step_tts: 1,
-        step_video: 2,
-        step_merge: 3,
-        done: 3,
-      };
-
-      pollRef.current = setInterval(async () => {
-        try {
-          const statusRes = await fetch(`/api/status/${jobId}`);
-          const job = await statusRes.json();
-
-          if (STEP_MAP[job.status] !== undefined) {
-            setCurrentStep(STEP_MAP[job.status]);
-          }
-
-          if (job.status === "done" && job.videoUrl) {
-            stopPolling();
-            setVideoUrl(job.videoUrl);
-            setAppState("result");
-          } else if (job.status === "error") {
-            stopPolling();
-            setErrorMsg(job.error || "Something went wrong.");
-            setAppState("idle");
-          }
-        } catch {
-          // ignore transient poll errors
-        }
-      }, 5000);
+      startPolling(newJobId);
     } catch (err) {
       stopPolling();
       setErrorMsg(err instanceof Error ? err.message : "Something went wrong.");
       setAppState("idle");
+    }
+  };
+
+  const startPolling = (targetJobId: string) => {
+    stopPolling();
+    const STEP_MAP: Record<string, number> = {
+      step_image: 0,
+      step_script: 1,
+      step_tts: 1,
+      step_video: 2,
+      step_merge: 3,
+      preview: 1,
+      done: 4,
+    };
+
+    pollRef.current = setInterval(async () => {
+      try {
+        const statusRes = await fetch(`/api/status/${targetJobId}`);
+        const job = await statusRes.json();
+
+        if (STEP_MAP[job.status] !== undefined) {
+          setCurrentStep(STEP_MAP[job.status]);
+        }
+
+        if (job.status === "preview" && job.renovatedImageUrl) {
+          stopPolling();
+          setPreviewImages({
+            before: job.roomImageUrl,
+            after: job.renovatedImageUrl
+          });
+          setAppState("preview");
+        } else if (job.status === "done" && job.videoUrl) {
+          stopPolling();
+          setVideoUrl(job.videoUrl);
+          setAppState("result");
+        } else if (job.status === "error") {
+          stopPolling();
+          setErrorMsg(job.error || "Something went wrong.");
+          setAppState("idle");
+        }
+      } catch {
+        // ignore
+      }
+    }, 3000);
+  };
+
+  const handleProceedToVideo = async () => {
+    if (!jobId) return;
+    setAppState("loading");
+    setCurrentStep(1); // Resume at script step
+
+    try {
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jobId }),
+      });
+      if (!res.ok) throw new Error("Failed to proceed to video");
+
+      startPolling(jobId);
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : "Failed to generate video.");
+      setAppState("preview");
     }
   };
 
@@ -133,13 +168,18 @@ export default function Home() {
     setCurrentStep(0);
     setVideoUrl("");
     setErrorMsg("");
+    setJobId("");
+    setPreviewImages(null);
   };
 
   return (
     <main className="flex-1 flex flex-col items-center justify-start p-6 md:p-12 max-w-5xl mx-auto w-full">
       {/* Header */}
       <div className="w-full flex justify-between items-center mb-12 sm:mb-20">
-        <div className="flex items-center gap-2 text-foreground font-bold tracking-tight">
+        <div
+          className="flex items-center gap-2 text-foreground font-bold tracking-tight cursor-pointer"
+          onClick={handleReset}
+        >
           <div className="bg-accent text-black p-1.5 rounded-lg">
             <Sparkles size={16} />
           </div>
@@ -219,6 +259,73 @@ export default function Home() {
       {appState === "loading" && (
         <div className="w-full flex-1 flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-500">
           <ProgressStepper currentStep={currentStep} />
+        </div>
+      )}
+
+      {appState === "preview" && previewImages && (
+        <div className="w-full max-w-2xl animate-in fade-in slide-in-from-bottom-8 duration-700">
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-6">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+              Step 1 Complete: AI Room Transformation
+            </div>
+            <h2 className="text-3xl md:text-5xl font-black mb-3 italic tracking-tight uppercase leading-none">
+              How does it <span className="text-accent">Look?</span>
+            </h2>
+            <p className="text-zinc-400 font-medium">Use the slider to compare with the original boring room.</p>
+          </div>
+
+          <BeforeAfterSlider
+            beforeUrl={previewImages.before}
+            afterUrl={previewImages.after}
+          />
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-10">
+            <button
+              onClick={handleProceedToVideo}
+              className="flex items-center justify-center gap-3 bg-accent hover:bg-black text-black hover:text-white border-2 border-accent px-8 py-5 rounded-2xl font-black text-xl transition-all shadow-xl hover:-translate-y-1 active:scale-95"
+            >
+              <Play size={24} fill="currentColor" />
+              CREATE AI VIDEO
+            </button>
+
+            <div className="flex gap-4">
+              <a
+                href={previewImages.after}
+                download="renovated-room.jpg"
+                className="flex-1 flex items-center justify-center gap-2 bg-surface hover:bg-surface-hover border border-surface-border text-zinc-300 px-4 py-4 rounded-2xl font-bold transition-all hover:text-white active:scale-95"
+              >
+                <Download size={20} />
+                Save .JPG
+              </a>
+              <button
+                onClick={() => {
+                  if (navigator.share) {
+                    navigator.share({
+                      title: 'My Dream Room Transformation',
+                      text: 'Check out how I renovated my room with AI!',
+                      url: previewImages.after
+                    });
+                  } else {
+                    alert("Image URL copied to clipboard!");
+                    navigator.clipboard.writeText(previewImages.after);
+                  }
+                }}
+                className="flex-1 flex items-center justify-center gap-2 bg-surface hover:bg-surface-hover border border-surface-border text-zinc-300 px-4 py-4 rounded-2xl font-bold transition-all hover:text-white active:scale-95"
+              >
+                <Share2 size={20} />
+                Share
+              </button>
+            </div>
+          </div>
+
+          <button
+            onClick={handleReset}
+            className="w-full mt-8 flex items-center justify-center gap-2 text-zinc-500 hover:text-white transition-colors"
+          >
+            <RotateCcw size={16} />
+            <span className="text-sm font-medium">Clear and start over</span>
+          </button>
         </div>
       )}
 
