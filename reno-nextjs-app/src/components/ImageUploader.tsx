@@ -32,7 +32,7 @@ export function ImageUploader({ label, onImageSelected, selectedFile }: ImageUpl
     }
   };
 
-  const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+  const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -72,7 +72,7 @@ export function ImageUploader({ label, onImageSelected, selectedFile }: ImageUpl
           type="file"
           ref={fileInputRef}
           className="hidden"
-          accept="image/jpeg, image/png, image/webp"
+          accept="image/jpeg, image/png, image/webp, image/heic, image/heif"
           onChange={handleFileChange}
         />
         

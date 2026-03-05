@@ -110,7 +110,10 @@ export default function Home() {
         const roomForm = new FormData();
         roomForm.append("file", roomFile);
         const roomUpload = await fetch("/api/upload", { method: "POST", body: roomForm });
-        if (!roomUpload.ok) throw new Error("Failed to upload room photo");
+        if (!roomUpload.ok) {
+          const errBody = await roomUpload.json().catch(() => ({}));
+          throw new Error(errBody.error || `Upload failed (HTTP ${roomUpload.status})`);
+        }
         const res = await roomUpload.json();
         roomPublicPath = res.publicPath;
       } else if (selectedExample) {
