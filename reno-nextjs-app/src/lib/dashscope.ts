@@ -220,7 +220,7 @@ export async function submitVideoGeneration(params: {
       method: "POST",
       headers: getHeaders(true),
       body: JSON.stringify({
-        model: "wan2.1-kf2v-plus",
+        model: "wan2.2-kf2v-flash",
         input: {
           first_frame_url: `data:image/jpeg;base64,${params.firstFrameBase64}`,
           last_frame_url: `data:image/jpeg;base64,${params.lastFrameBase64}`,
