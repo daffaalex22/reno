@@ -1,5 +1,5 @@
 /**
- * Test script for wan2.1-kf2v-plus AI model
+ * Test script for wan2.2-kf2v-flash AI model
  * This model generates video frames between a first frame and last frame
  */
 
@@ -51,13 +51,13 @@ const CONFIG = {
 };
 
 /**
- * Call the wan2.1-kf2v-plus model to generate video
+ * Call the wan2.2-kf2v-flash model to generate video
  */
 async function generateVideo(
   request: Wan2_1_KF2V_Plus_Request
 ): Promise<Wan2_1_KF2V_Plus_Response> {
   const payload = {
-    model: 'wan2.1-kf2v-plus',
+    model: 'wan2.2-kf2v-flash',
     input: {
       first_frame_url: request.first_frame_url,
       last_frame_url: request.last_frame_url,
@@ -72,7 +72,7 @@ async function generateVideo(
     },
   };
 
-  console.log('Sending request to wan2.1-kf2v-plus...');
+  console.log('Sending request to wan2.2-kf2v-flash...');
   console.log('First frame:', request.first_frame_url);
   console.log('Last frame:', request.last_frame_url);
 

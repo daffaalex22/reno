@@ -51,7 +51,7 @@
 | **Frontend + Backend** | Next.js 15+ (TypeScript) ⚛️                         |
 | **Hosting**            | Alibaba Cloud Simple Application Server (Ubuntu) ☁️ |
 | **Image Editing**      | `qwen-image-edit` (Model Studio) 🖼️               |
-| **Video Generation**   | `wan2.1-kf2v-plus` (Model Studio) 📹                |
+| **Video Generation**   | `wan2.2-kf2v-flash` (Model Studio) 📹                |
 | **Script Generation**   | `qwen-max` (Model Studio) 📝                        |
 | **Text-to-Speech**     | `qwen3-tts-flash` (Model Studio) 🗣️               |
 | **Video Processing**   | `ffmpeg` (Server-side) 🎞️                         |
@@ -61,7 +61,7 @@
 1. **Image Synthesis** 🖼️: `qwen-image-edit` takes the room photo and transforms it based on the chosen style.
 2. **Script Generation** 📝: `qwen-max` writes a short, punchy voiceover script.
 3. **TTS Generation** 🎙️: `qwen3-tts-flash` creates the narration audio from the script.
-4. **Video Synthesis** 🎬: `wan2.1-kf2v-plus` renders a cinematic transition between the original and renovated rooms.
+4. **Video Synthesis** 🎬: `wan2.2-kf2v-flash` renders a cinematic transition between the original and renovated rooms.
 5. **Final Assembly** 🛠️: `ffmpeg` merges the silent video with the generated narration.
 
 ## Getting Started 🚀

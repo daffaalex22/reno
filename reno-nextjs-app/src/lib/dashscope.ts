@@ -1,6 +1,6 @@
 /**
  * Alibaba Cloud DashScope (Singapore) API wrapper
- * Covers: qwen-image-2.0-pro (image edit), wan2.1-kf2v-plus, qwen-max, qwen3-tts-flash
+ * Covers: qwen-image-2.0-pro (image edit), wan2.2-kf2v-flash, qwen-max, qwen3-tts-flash
  */
 import sharp from "sharp";
 
@@ -205,7 +205,7 @@ export async function generateTTS(text: string): Promise<ArrayBuffer> {
 }
 
 // ─────────────────────────────────────────────
-// Step 3: wan2.1-kf2v-plus (Keyframe to Video)
+// Step 3: wan2.2-kf2v-flash (Keyframe to Video)
 // Accepts base64 JPEG strings — passed as data URIs, no upload needed.
 // Returns task_id
 // ─────────────────────────────────────────────

@@ -31,7 +31,7 @@ This is a **Next.js** web app hosted on **Alibaba Cloud Simple Application Serve
 | Frontend + Backend | Next.js (TypeScript) |
 | Hosting | Alibaba Cloud Simple Application Server (Ubuntu) |
 | Image Editing | `wan2.5-i2i-preview` via Model Studio API |
-| Video Generation | `wan2.1-kf2v-plus` via Model Studio API |
+| Video Generation | `wan2.2-kf2v-flash` via Model Studio API |
 | Text-to-Speech | `qwen3-tts-flash` via Model Studio API |
 | Video + Audio Merge | `ffmpeg` (on the SAS server) |
 | API Region | Singapore (`dashscope-intl.aliyuncs.com`) |
@@ -53,7 +53,7 @@ Step 2: qwen3-tts-flash
   → Input: narration script (e.g. "Here's your room today... and here's your dream renovation.")
   → Output: narration audio (.wav)
         ↓
-Step 3: wan2.1-kf2v-plus
+Step 3: wan2.2-kf2v-flash
   → Input: first_frame_url (original room) + last_frame_url (renovated room) + prompt
   → Output: transformation video (silent .mp4)
         ↓
@@ -131,7 +131,7 @@ POST /services/aigc/text-to-speech/synthesis
 
 ---
 
-### Step 3 — Keyframe to Video: `wan2.1-kf2v-plus`
+### Step 3 — Keyframe to Video: `wan2.2-kf2v-flash`
 
 ```http
 POST /services/aigc/image2video/video-synthesis
@@ -140,7 +140,7 @@ Header: X-DashScope-Async: enable
 
 ```json
 {
-  "model": "wan2.1-kf2v-plus",
+  "model": "wan2.2-kf2v-flash",
   "input": {
     "first_frame_url": "<original_room_url>",
     "last_frame_url": "<renovated_room_url>",
